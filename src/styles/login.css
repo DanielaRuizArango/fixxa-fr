@@ -1,0 +1,102 @@
+
+/* Reset básico */
+/* * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+} */
+
+/* body {
+  margin: 0;
+  font-family: 'Kadwa', serif;
+} */
+
+/* Contenedor principal */
+/* .login-container {
+  width: 100%;
+  height: 100vh;
+  background-color: #1C2526;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */
+
+/* Tarjeta */
+/* .login-card {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  color: #FFFFFF;
+} */
+
+/* Logo */
+/* .logo {
+  background-color: #8C7E97;
+  border-radius: 100px;
+  width: 200px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px auto;
+} */
+/* 
+.logo h1 {
+  color: #000000;
+  font-weight: 700;
+} */
+
+/* Labels */
+/* label {
+  font-weight: 400;
+} */
+
+/* Inputs */
+/* input[type="email"],
+input[type="password"] {
+  background-color: #4C5462;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  color: #FFFFFF;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+} */
+
+/* Texto recuperar contraseña */
+/* .forgot-password {
+  font-size: 12px;
+  text-align: right;
+  cursor: pointer;
+} */
+
+/* Botón */
+/* .login-btn {
+  margin-top: 10px;
+  background-color: #8C7E97;
+  border: none;
+  padding: 12px;
+  border-radius: 25px;
+  color: #FFFFFF;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  width: 100%;
+} */
+
+/* .login-btn:hover {
+  opacity: 0.85;
+} */
+
+/* Registro */
+/* .register-text {
+  text-align: center;
+  font-size: 13px;
+}
+
+.register-text span {
+  color: #8C7E97;
+  cursor: pointer;
+} */

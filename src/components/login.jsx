@@ -27,12 +27,6 @@ const Login = () => {
           ¿Olvidó su contraseña?
         </p>
 
-        {/* Fake captcha */}
-        <div className="bg-white text-black p-3 rounded-md flex items-center gap-2">
-          <input type="checkbox" />
-          <span>I'm not a robot</span>
-        </div>
-
         {/* Botón */}
         <button className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-2 hover:opacity-80 transition duration-300">
           Ingresar
