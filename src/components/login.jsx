@@ -1,12 +1,12 @@
+import { Link } from "react-router-dom"
 const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1C2526] font-['Kadwa']">
-      
+
       <div className="w-[350px] flex flex-col gap-4 text-white">
-        
+
         {/* Logo */}
-        <div className="bg-[#8C7E97] w-[200px] h-[120px] rounded-full flex items-center justify-center mx-auto mb-6">
-          <h1 className="text-black text-3xl font-bold">FIXXA</h1>
+        <div className="w-[350px] h-[252px] rounded-full flex items-center justify-center mx-auto mb-6 bg-[url('/images/fixxa-logo.svg')] bg-no-repeat bg-center bg-contain">
         </div>
 
         {/* Correo */}
@@ -34,9 +34,12 @@ const Login = () => {
 
         <p className="text-center text-sm">
           ¿No tienes una cuenta?{" "}
-          <span className="text-[#8C7E97] cursor-pointer hover:underline">
+          <Link
+            to="/register"
+            className="text-[#8C7E97] hover:underline"
+          >
             Regístrate aquí
-          </span>
+          </Link>
         </p>
 
       </div>
