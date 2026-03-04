@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 const CustomerForm = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1C2526] font-['Kadwa'] px-4">
       <div className="w-full max-w-md flex flex-col gap-4 text-white">
@@ -84,9 +85,12 @@ const CustomerForm = () => {
 
         {/* Atras */}
         <p className="text-center text-sm mt-4">
-          <Link to="/register" className="text-[#8C7E97] hover:underline cursor-pointer">
+          <button
+            onClick={() => navigate("/register")}
+            className="text-[#8C7E97] hover:underline cursor-pointer"
+          >
             Atras
-          </Link>
+          </button>
         </p>
 
       </div>

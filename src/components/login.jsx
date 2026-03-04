@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { fetchData } from "../api";
 
 const Login = () => {
@@ -94,12 +94,12 @@ const Login = () => {
 
         <p className="text-center text-sm">
           ¿No tienes una cuenta?{" "}
-          <Link
-            to="/register"
+          <button
+            onClick={() => navigate("/register")}
             className="text-[#8C7E97] hover:underline"
           >
             Regístrate aquí
-          </Link>
+          </button>
         </p>
       </div>
     </div>
