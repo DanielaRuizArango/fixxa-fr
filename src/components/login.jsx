@@ -23,7 +23,7 @@ const Login = () => {
       // La ruta completa que el usuario especificó es http://localhost:8000/api/client/login
       // Como el proxy en vite.config.js redirige /api -> http://127.0.0.1:8000/
       // y la utilidad api.js usa el proxy, llamamos a /client/login
-      const data = await fetchData('/client/login', {
+      const data = await fetchData('/login', {
         method: 'POST',
         body: JSON.stringify({
           email: email,
@@ -34,13 +34,24 @@ const Login = () => {
       console.log('Login exitoso:', data);
 
       // Guardar token si es necesario
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      const token = data.data?.access_token || data.token;
+      if (token) {
+        localStorage.setItem('token', token);
       }
 
-      // Redirigir al usuario (ejemplo: al inicio o dashboard)
-      // navigate("/dashboard"); 
-      alert("¡Bienvenido!");
+      const role = data.data?.role;
+      if (role) {
+        localStorage.setItem('role', role);
+      }
+
+      // Redirigir al usuario según su rol
+      if (role === 'client') {
+        navigate("/indexCustomer");
+      } else if (role === 'technician') {
+        navigate("/indexTechnician");
+      } else {
+        alert("¡Bienvenido!");
+      }
     } catch (err) {
       console.error('Error en login:', err);
       setError("Error al iniciar sesión. Verifique sus credenciales.");
