@@ -4,6 +4,12 @@ import { User, Plus } from "lucide-react";
 const IndexTechnical = () => {
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-[#2B2F36] font-['Kadwa'] text-white">
 
@@ -18,8 +24,11 @@ const IndexTechnical = () => {
         {/* Sidebar */}
         <aside className="w-64 bg-gradient-to-b from-[#0F2027] to-[#203A43] min-h-[calc(100vh-72px)] p-6 space-y-4">
 
-          <button className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] box-border">
-            Botón
+          <button
+            onClick={handleLogout}
+            className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] transition box-border"
+          >
+            log out
           </button>
 
           <button className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] transition box-border">
