@@ -6,6 +6,7 @@ import CustomerForm from "./components/forms/customerForm"
 import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
+import CustomerProfile from "./components/showProfile/customerProfile"
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/indexCustomer" element={<IndexCustomer />} />
       <Route path="/technicianForm" element={<TechnicianForm />} />
       <Route path="/indexTechnician" element={<IndexTechnician />} />
+      <Route path="/customerProfile" element={<CustomerProfile />} />
       <Route path="*" element={<Login />} />
     </Routes>
   )

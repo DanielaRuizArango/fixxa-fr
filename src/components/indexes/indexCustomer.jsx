@@ -16,7 +16,7 @@ const IndexCustomer = () => {
       {/* Header */}
       <header className="bg-[#8C7E97] flex justify-end items-center px-8 py-4 gap-2">
         <span className="text-xl font-semibold">Customer</span>
-        <User size={28} />
+        <a onClick={() => navigate("/customerProfile")}><User size={28} /></a>
       </header>
 
       <div className="flex">
