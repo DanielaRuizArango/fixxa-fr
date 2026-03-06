@@ -2,7 +2,12 @@ import { Routes, Route } from "react-router-dom"
 import './index.css' 
 import Login from "./components/login"
 import Register from "./components/register"
-import CustomerForm from "./components/customerForm"
+import CustomerForm from "./components/forms/customerForm"
+import TechnicianForm from "./components/forms/technicianForm"
+import IndexCustomer from "./components/indexes/indexCustomer"
+import IndexTechnician from "./components/indexes/indexTechnician"
+import CustomerProfile from "./components/showProfile/customerProfile"
+
 
 function App() {
   return (
@@ -10,6 +15,10 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/customerForm" element={<CustomerForm />} />
+      <Route path="/indexCustomer" element={<IndexCustomer />} />
+      <Route path="/technicianForm" element={<TechnicianForm />} />
+      <Route path="/indexTechnician" element={<IndexTechnician />} />
+      <Route path="/customerProfile" element={<CustomerProfile />} />
       <Route path="*" element={<Login />} />
     </Routes>
   )
