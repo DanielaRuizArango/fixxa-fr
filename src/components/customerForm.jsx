@@ -55,9 +55,8 @@ const CustomerForm = () => {
           defaultValue=""
         >
           <option value="" disabled>Selecciona un tipo</option>
-          <option value="dni">DNI</option>
-          <option value="pasaporte">Pasaporte</option>
-          <option value="cedula">Cédula</option>
+          <option value="Cédula">Cédula</option>
+          <option value="Pasaporte">Pasaporte</option>
           <option value="otro">Otro</option>
         </select>
 
