@@ -16,16 +16,8 @@ function App() {
       {/* Rutas públicas */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
-      {/* Rutas protegidas - solo clientes */}
-      <Route
-        path="/customerForm"
-        element={
-          <ProtectedRoute allowedRoles={["client"]}>
-            <CustomerForm />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/customerForm" element={<CustomerForm />} />
+      <Route path="/technicianForm" element={<TechnicianForm />} />
       <Route
         path="/indexCustomer"
         element={
@@ -44,14 +36,6 @@ function App() {
       />
 
       {/* Rutas protegidas - solo técnicos */}
-      <Route
-        path="/technicianForm"
-        element={
-          <ProtectedRoute allowedRoles={["technician"]}>
-            <TechnicianForm />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/indexTechnician"
         element={

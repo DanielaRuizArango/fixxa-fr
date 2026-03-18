@@ -1,7 +1,61 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchData } from "../../api";
 
 const TechnicianForm = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    city: "",
+    address: "",
+    type_id: "",
+    id_number: "",
+    experience: "",
+    title: "",
+    image: null,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, image: e.target.files[0] });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("email", formData.email);
+      data.append("password", formData.password);
+      data.append("phone", formData.phone);
+      data.append("city", formData.city);
+      data.append("address", formData.address);
+      data.append("type_id", formData.type_id);
+      data.append("id_number", formData.id_number);
+      data.append("experience", formData.experience);
+      data.append("title", formData.title);
+      if (formData.image) {
+        data.append("image", formData.image);
+      }
+
+      await fetchData("/technician/register", {
+        method: "POST",
+        headers: {}, // Remove Content-Type for FormData
+        body: data,
+      });
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration failed:", error);
+      // Optionally show an error message
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1C2526] font-['Kadwa'] px-4">
@@ -15,6 +69,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Nombre</label>
         <input
           type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
           placeholder="Tu nombre completo"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -23,7 +80,21 @@ const TechnicianForm = () => {
         <label className="text-sm">Correo</label>
         <input
           type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
           placeholder="correo@ejemplo.com"
+          className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
+        />
+
+        {/* Contraseña */}
+        <label className="text-sm">Contraseña</label>
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleInputChange}
+          placeholder="Tu contraseña"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
 
@@ -31,6 +102,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Celular</label>
         <input
           type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
           placeholder="+123 456 7890"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -39,6 +113,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Ciudad</label>
         <input
           type="text"
+          name="city"
+          value={formData.city}
+          onChange={handleInputChange}
           placeholder="Ciudad donde resides"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -47,6 +124,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Dirección</label>
         <input
           type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleInputChange}
           placeholder="Tu dirección"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -54,8 +134,10 @@ const TechnicianForm = () => {
         {/* Tipo de documento */}
         <label className="text-sm">Tipo de documento</label>
         <select
+          name="type_id"
+          value={formData.type_id}
+          onChange={handleInputChange}
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
-          defaultValue=""
         >
           <option value="" disabled>Selecciona un tipo</option>
           <option value="dni">DNI</option>
@@ -68,6 +150,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Número de documento</label>
         <input
           type="text"
+          name="id_number"
+          value={formData.id_number}
+          onChange={handleInputChange}
           placeholder="Número de documento"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -75,6 +160,9 @@ const TechnicianForm = () => {
         {/* Experiencia */}
         <label className="text-sm">Experiencia</label>
         <textarea
+          name="experience"
+          value={formData.experience}
+          onChange={handleInputChange}
           placeholder="Describe tu experiencia laboral"
           rows="3"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97] resize-none"
@@ -84,6 +172,9 @@ const TechnicianForm = () => {
         <label className="text-sm">Título</label>
         <input
           type="text"
+          name="title"
+          value={formData.title}
+          onChange={handleInputChange}
           placeholder="Ej: Técnico en refrigeración"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -93,11 +184,15 @@ const TechnicianForm = () => {
         <input
           type="file"
           accept="image/*"
+          onChange={handleFileChange}
           className="bg-[#4C5462] rounded-lg p-1 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
 
         {/* Botón de enviar */}
-        <button className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-4 hover:opacity-80 transition duration-300">
+        <button
+          onClick={handleSubmit}
+          className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-4 hover:opacity-80 transition duration-300"
+        >
           Registrar Técnico
         </button>
 
