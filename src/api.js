@@ -18,7 +18,16 @@ export const fetchData = async (endpoint, options = {}) => {
             throw error;
         }
 
-        return await response.json();
+        const data = await response.json();
+
+        // Custom error handling for 200 OK responses with status: "error" (e.g. form validation)
+        if (data && data.status === "error") {
+            const error = new Error(data.message || "Error");
+            error.data = data;
+            throw error;
+        }
+
+        return data;
     } catch (error) {
         console.error('API call failed:', error);
         throw error;
