@@ -12,7 +12,10 @@ export const fetchData = async (endpoint, options = {}) => {
         });
 
         if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            const error = new Error(errorData.message || `Error: ${response.statusText}`);
+            error.data = errorData;
+            throw error;
         }
 
         return await response.json();

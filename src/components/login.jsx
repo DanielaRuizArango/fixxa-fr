@@ -49,12 +49,10 @@ const Login = () => {
         navigate("/indexCustomer");
       } else if (role === 'technician') {
         navigate("/indexTechnician");
-      } else {
-        alert("¡Bienvenido!");
       }
     } catch (err) {
       console.error('Error en login:', err);
-      setError("Error al iniciar sesión. Verifique sus credenciales.");
+      setError(err.message || "Error al iniciar sesión. Verifique sus credenciales.");
     } finally {
       setLoading(false);
     }
