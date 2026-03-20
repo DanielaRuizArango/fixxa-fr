@@ -7,7 +7,10 @@ import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
 import CustomerProfile from "./components/showProfile/customerProfile"
+import EditCustomer from "./components/profile/editCustomer"
 import ProtectedRoute from "./components/ProtectedRoute"
+import ForgotPassword from "./components/forgotPassword"
+import CreateCases from "./components/cases/createCases"
 
 
 function App() {
@@ -18,6 +21,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/customerForm" element={<CustomerForm />} />
       <Route path="/technicianForm" element={<TechnicianForm />} />
+      <Route path="/forgotpassword" element={<ForgotPassword />} />
       <Route
         path="/indexCustomer"
         element={
@@ -31,6 +35,24 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["client"]}>
             <CustomerProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/editCustomer"
+        element={
+          <ProtectedRoute allowedRoles={["client"]}>
+            <EditCustomer />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/createCases"
+        element={
+          <ProtectedRoute allowedRoles={["client"]}>
+            <CreateCases />
           </ProtectedRoute>
         }
       />

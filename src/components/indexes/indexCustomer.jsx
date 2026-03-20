@@ -34,7 +34,7 @@ const IndexCustomer = () => {
 
       {/* Botón flotante */}
       <button
-        onClick={() => navigate("/create-case")}
+        onClick={() => navigate("/createCases")}
         className="absolute bottom-10 right-10 bg-black p-4 rounded-xl shadow-lg hover:scale-110 transition"
       >
         <Plus size={24} />

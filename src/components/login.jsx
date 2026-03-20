@@ -72,7 +72,7 @@ const Login = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="ejemplo@correo.com"
-          className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
+          className="bg-[#4C5462] rounded-lg p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
 
         {/* Contraseña */}
@@ -87,7 +87,7 @@ const Login = () => {
 
         {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
-        <p className="text-xs text-right cursor-pointer hover:text-[#8C7E97]">
+        <p className="text-xs text-right cursor-pointer hover:text-[#8C7E97]" onClick={() => navigate("/forgotpassword")}>
           ¿Olvidó su contraseña?
         </p>
 
