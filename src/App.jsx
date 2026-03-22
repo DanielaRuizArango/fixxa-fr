@@ -22,6 +22,7 @@ function App() {
       <Route path="/customerForm" element={<CustomerForm />} />
       <Route path="/technicianForm" element={<TechnicianForm />} />
       <Route path="/forgotpassword" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ForgotPassword />} />
       <Route
         path="/indexCustomer"
         element={
