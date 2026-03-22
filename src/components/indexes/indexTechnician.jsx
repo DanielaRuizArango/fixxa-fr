@@ -6,7 +6,7 @@ const IndexTechnical = () => {
   const navigate = useNavigate();
 
   return (
-    <MainLayout roleName="Technical">
+    <MainLayout roleName="Technical" profileRoute="/technicianProfile">
 
       {/* Card de caso */}
       <div className="bg-[#8C7E97] rounded-xl px-8 py-6 flex justify-between items-center">

@@ -7,7 +7,9 @@ import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
 import CustomerProfile from "./components/showProfile/customerProfile"
+import TechnicianProfile from "./components/showProfile/technicianProfile"
 import EditCustomer from "./components/profile/editCustomer"
+import EditTechnician from "./components/profile/editTechnician"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ForgotPassword from "./components/forgotPassword"
 import CreateCases from "./components/cases/createCases"
@@ -64,6 +66,24 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["technician"]}>
             <IndexTechnician />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/technicianProfile"
+        element={
+          <ProtectedRoute allowedRoles={["technician"]}>
+            <TechnicianProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/editTechnician"
+        element={
+          <ProtectedRoute allowedRoles={["technician"]}>
+            <EditTechnician />
           </ProtectedRoute>
         }
       />
