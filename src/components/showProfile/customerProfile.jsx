@@ -15,6 +15,9 @@ const CustomerProfile = () => {
       try {
         const response = await fetchData('/client/me');
         setData(response.data);
+        if (response.data?.name) {
+          localStorage.setItem('userName', response.data.name);
+        }
       } catch (err) {
         setError("No se pudo cargar la información del perfil.");
         console.error(err);
@@ -28,7 +31,7 @@ const CustomerProfile = () => {
 
   if (loading) {
     return (
-      <MainLayout roleName="Customer" profileRoute="/customerProfile">
+      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Customer"} profileRoute="/customerProfile">
         <div className="flex flex-col items-center justify-center pt-20">
           <div className="w-12 h-12 border-4 border-[#8C7E97] border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-4 text-gray-300">Cargando perfil...</p>
@@ -39,7 +42,7 @@ const CustomerProfile = () => {
 
   if (error || !data) {
     return (
-      <MainLayout roleName="Customer" profileRoute="/customerProfile">
+      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Customer"} profileRoute="/customerProfile">
         <div className="text-center pt-20 font-['Kadwa']">
           <p className="text-red-400 mb-4">{error || "Error al cargar datos."}</p>
           <button onClick={() => navigate("/indexCustomer")} className="text-[#8C7E97] hover:underline">
@@ -51,7 +54,7 @@ const CustomerProfile = () => {
   }
 
   return (
-    <MainLayout roleName="Customer" profileRoute="/customerProfile">
+    <MainLayout roleName={data.name} profileRoute="/customerProfile">
 
       {/* Botón de regreso */}
       <button

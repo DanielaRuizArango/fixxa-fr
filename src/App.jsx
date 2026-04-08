@@ -12,8 +12,8 @@ import EditCustomer from "./components/profile/editCustomer"
 import EditTechnician from "./components/profile/editTechnician"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ForgotPassword from "./components/forgotPassword"
-import CreateCases from "./components/cases/createCases"
-
+import CreateCases from "./components/cases/createCases.jsx"
+import CaseDetail from "./components/cases/showCases.jsx"
 
 function App() {
   return (
@@ -84,6 +84,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["technician"]}>
             <EditTechnician />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/case-detail/:id"
+        element={
+          <ProtectedRoute allowedRoles={["client", "technician"]}>
+            <CaseDetail />
           </ProtectedRoute>
         }
       />

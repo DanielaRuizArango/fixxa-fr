@@ -9,10 +9,13 @@ const IndexCustomer = () => {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userName, setUserName] = useState("Customer");
 
   useEffect(() => {
     const loadCases = async () => {
       try {
+        const userResponse = await fetchData('/client/me');
+        setUserName(userResponse.data?.name || "Customer");
         const response = await fetchData('/client/cases');
         setCases(response.data || []);
       } catch (err) {
@@ -35,7 +38,7 @@ const IndexCustomer = () => {
   };
 
   return (
-    <MainLayout roleName="Customer" profileRoute="/customerProfile">
+    <MainLayout roleName={localStorage.getItem('userName') || userName} profileRoute="/customerProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
         
         <div className="flex justify-between items-center mb-2">

@@ -23,6 +23,7 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
       onClick: () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
+        localStorage.removeItem("userName");
         navigate("/login");
       },
     },

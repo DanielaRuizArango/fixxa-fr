@@ -44,6 +44,11 @@ const Login = () => {
         localStorage.setItem('role', role);
       }
 
+      const name = data.data?.name;
+      if (name) {
+        localStorage.setItem('userName', name);
+      }
+
       // Redirigir al usuario según su rol
       if (role === 'client') {
         navigate("/indexCustomer");
