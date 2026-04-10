@@ -181,7 +181,7 @@ const CreateCase = () => {
             <input
               type="file"
               multiple
-              accept="image/*"
+              accept="image/*,image/webp"
               onChange={handleImagesChange}
               disabled={loading}
               className="w-full p-2 rounded-xl bg-[#1f2a2b] text-white border border-[#3f4b4d] file:bg-[#8c7e97] file:text-white file:px-3 file:py-1 file:rounded-full focus:outline-none focus:border-[#8c7e97]"

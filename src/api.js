@@ -36,3 +36,12 @@ export const fetchData = async (endpoint, options = {}) => {
         throw error;
     }
 };
+
+export const getStorageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const storageBase = import.meta.env.VITE_API_STORAGE_URL || 'http://localhost:8000/storage';
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return `${storageBase}/${cleanPath}`;
+};

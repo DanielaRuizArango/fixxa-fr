@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, DollarSign, Clock, User, CheckCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
-import { fetchData } from "../../api.js";
+import { fetchData, getStorageUrl } from "../../api.js";
 
 const CaseDetail = () => {
   const { id } = useParams();
@@ -170,7 +170,7 @@ const CaseDetail = () => {
                     {images.map((image, index) => (
                       <img
                         key={index}
-                        src={typeof image === "string" ? image : image.url}
+                        src={getStorageUrl(typeof image === "string" ? image : (image.image_path || image.url))}
                         alt={`Caso ${index + 1}`}
                         className="h-32 w-full rounded-2xl object-cover"
                       />

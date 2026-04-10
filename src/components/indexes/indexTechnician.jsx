@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Image as ImageIcon, MapPin } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 import { useState, useEffect } from "react";
 
 const IndexTechnical = () => {
@@ -75,7 +75,7 @@ const IndexTechnical = () => {
                 <div className="w-full md:w-48 h-48 md:h-auto bg-[#1c2526] relative overflow-hidden">
                   {caseItem.images && caseItem.images.length > 0 ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${caseItem.images[0].image_path}`} 
+                      src={getStorageUrl(caseItem.images[0].image_path)} 
                       alt={caseItem.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

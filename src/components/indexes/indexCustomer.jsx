@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 
 const IndexCustomer = () => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const IndexCustomer = () => {
                 <div className="w-full md:w-32 lg:w-48 h-48 md:h-auto bg-[#1c2526] relative overflow-hidden flex-shrink-0">
                   {serviceCase.images && serviceCase.images.length > 0 ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${serviceCase.images[0].image_path}`} 
+                      src={getStorageUrl(serviceCase.images[0].image_path)} 
                       alt={serviceCase.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
