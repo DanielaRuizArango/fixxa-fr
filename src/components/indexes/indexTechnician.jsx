@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Users, Image as ImageIcon, MapPin } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
 import { useState, useEffect } from "react";
@@ -68,33 +68,54 @@ const IndexTechnical = () => {
             {cases.map((caseItem) => (
               <div
                 key={caseItem.id}
-                className="bg-[#8C7E97] rounded-xl px-6 py-5 hover:bg-[#9d8fa8] transition cursor-pointer shadow-lg shadow-black/10"
+                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl overflow-hidden flex flex-col md:flex-row transition-all cursor-pointer shadow-lg group"
                 onClick={() => navigate(`/case-detail/${caseItem.id}`)}
               >
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-base md:text-lg font-semibold text-white truncate">
-                        {caseItem.title || caseItem.name || 'Nombre de caso'}
-                      </p>
+                {/* Imagen del caso */}
+                <div className="w-full md:w-48 h-48 md:h-auto bg-[#1c2526] relative overflow-hidden">
+                  {caseItem.images && caseItem.images.length > 0 ? (
+                    <img 
+                      src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${caseItem.images[0].image_path}`} 
+                      alt={caseItem.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-700">
+                      <ImageIcon size={40} />
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.12em] border ${getStatusColor(caseItem.status)}`}>
-                      {caseItem.status || 'pending'}
-                    </span>
+                  )}
+                  <div className="absolute top-3 left-3 bg-[#1c2526]/60 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] text-gray-300 font-mono">
+                    FTS-{caseItem.id.toString().padStart(6, '0')}
                   </div>
+                </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div />
-                    <p className="text-sm text-white/90 font-semibold">
-                      {caseItem.id ? `FTS-${caseItem.id}` : 'FTS-000000'}
+                <div className="flex-1 p-5 flex flex-col justify-between gap-4">
+                  <div>
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-xl font-bold text-white group-hover:text-[#8C7E97] transition-colors line-clamp-1">
+                        {caseItem.title || caseItem.name || 'Solicitud de Servicio'}
+                      </h3>
+                    </div>
+                    
+                    <p className="text-sm text-gray-400 line-clamp-2 mt-2">
+                      {caseItem.description || 'Sin descripción detallada.'}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div />
-                    <p className="text-sm text-gray-200">
-                      {caseItem.location || caseItem.city || 'No especificado'}
-                    </p>
+                  <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
+                      <MapPin size={14} className="text-[#8C7E97]" />
+                      <span>{caseItem.client?.city || caseItem.location || 'No especificada'}</span>
+                    </div>
+
+                    {caseItem.responses?.length > 0 && (
+                      <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
+                        <Users size={14} />
+                        <span className="font-semibold">
+                          {caseItem.responses.length} {caseItem.responses.length === 1 ? 'técnico interesado' : 'técnicos interesados'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

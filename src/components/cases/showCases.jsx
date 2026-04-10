@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData } from "../../api.js";
 
@@ -12,6 +12,8 @@ const CaseDetail = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [estimatedCost, setEstimatedCost] = useState("");
+  const [questions, setQuestions] = useState("");
 
   const role = localStorage.getItem("role");
   const userName = localStorage.getItem("userName") || "Usuario";
@@ -43,16 +45,30 @@ const CaseDetail = () => {
   const handleInterest = async () => {
     setActionLoading(true);
     setSuccessMessage("");
+    setError(null);
 
     try {
-      const endpoint = `/technician/cases/${id}/interest`;
+      // Usamos el endpoint correcto según el api.php y el controlador CaseResponseController
+      const endpoint = `/technician/responses`;
       await fetchData(endpoint, {
         method: "POST",
+        body: JSON.stringify({
+          service_case_id: id,
+          estimated_cost: estimatedCost,
+          questions: questions
+        })
       });
-      setSuccessMessage("Solicitud de interés enviada correctamente.");
+      setSuccessMessage("Tu propuesta ha sido enviada correctamente.");
+      setEstimatedCost("");
+      setQuestions("");
+      
+      // Recargar los datos del caso
+      const response = await fetchData(apiEndpoint);
+      const data = response.data || response.case || response;
+      setCaseData(data);
     } catch (err) {
-      console.error("Error enviando interés:", err);
-      setError(err.message || "No se pudo enviar la solicitud de interés.");
+      console.error("Error enviando respuesta:", err);
+      setError(err.message || "No se pudo enviar la propuesta.");
     } finally {
       setActionLoading(false);
     }
@@ -77,17 +93,17 @@ const CaseDetail = () => {
     }
   };
 
-  const interestedTechnicians = Array.isArray(caseData?.interested_technicians)
-    ? caseData.interested_technicians
-    : Array.isArray(caseData?.interestedTechnicians)
-    ? caseData.interestedTechnicians
-    : Array.isArray(caseData?.interested)
-    ? caseData.interested
-    : Array.isArray(caseData?.technicians)
-    ? caseData.technicians
-    : Array.isArray(caseData?.offers)
-    ? caseData.offers
-    : [];
+  const interestedTechnicians = [
+    ...(Array.isArray(caseData?.responses) ? caseData.responses.map(r => ({ ...r, isResponse: true })) : []),
+    ...(Array.isArray(caseData?.interested_technicians) ? caseData.interested_technicians : []),
+    ...(Array.isArray(caseData?.interestedTechnicians) ? caseData.interestedTechnicians : []),
+    ...(Array.isArray(caseData?.interested) ? caseData.interested : []),
+    ...(Array.isArray(caseData?.technicians) ? caseData.technicians : []),
+    ...(Array.isArray(caseData?.offers) ? caseData.offers : [])
+  ];
+
+  // Eliminar duplicados si un técnico aparece en varias listas
+  const uniqueTechnicians = Array.from(new Map(interestedTechnicians.map(item => [item?.technician_id || item?.id || Math.random(), item])).values());
 
   const images = caseData?.images || caseData?.photos || [];
   const status = caseData?.status || caseData?.state || "pending";
@@ -111,7 +127,7 @@ const CaseDetail = () => {
               ← Volver
             </button>
             <h1 className="text-3xl font-bold mt-4">Detalle del Caso</h1>
-            <p className="text-sm text-gray-300 mt-2">Número: {caseNumber}</p>
+            <p className="text-sm text-gray-300 mt-2">Número: {caseNumber} • {caseData?.client?.city || location}</p>
           </div>
 
           <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-5 py-4 text-right">
@@ -167,26 +183,47 @@ const CaseDetail = () => {
             <div className="space-y-6">
               {role === "technician" ? (
                 <div className="rounded-3xl bg-[#2f343b] p-6 border border-white/10 shadow-lg shadow-black/10">
-                  <h3 className="text-xl font-semibold text-white">Interesarse en el caso</h3>
+                  <h3 className="text-xl font-semibold text-white">Enviar Propuesta</h3>
                   <p className="mt-2 text-sm text-gray-300">
-                    Envía una solicitud para indicar que te interesa trabajar en este caso.
+                    Proporciona un costo estimado y un comentario para el cliente.
                   </p>
-                  <button
-                    onClick={handleInterest}
-                    disabled={actionLoading}
-                    className="mt-6 w-full rounded-2xl bg-[#8C7E97] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#a493bd] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading ? "Enviando..." : "Mostrar interés"}
-                  </button>
+                  
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Costo Estimado ($)</label>
+                      <input 
+                        type="number" 
+                        value={estimatedCost}
+                        onChange={(e) => setEstimatedCost(e.target.value)}
+                        placeholder="Ej: 50000"
+                        className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Tu Mensaje/Preguntas</label>
+                      <textarea 
+                        value={questions}
+                        onChange={(e) => setQuestions(e.target.value)}
+                        placeholder="Explica tu propuesta o haz preguntas..."
+                        rows={3}
+                        className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition resize-none"
+                      />
+                    </div>
+                  </div>
 
                   <button
-                    onClick={() => handleStartChat(null)}
-                    disabled={actionLoading}
-                    className="mt-3 w-full rounded-2xl bg-[#1c2526] border border-[#8C7E97]/40 px-5 py-3 text-sm font-semibold text-[#8C7E97] transition hover:bg-[#8C7E97]/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={handleInterest}
+                    disabled={actionLoading || !estimatedCost}
+                    className="mt-6 w-full rounded-2xl bg-[#8C7E97] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#8C7E97]/20 transition hover:bg-[#a493bd] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    <MessageSquare size={18} />
-                    {actionLoading ? "Cargando..." : "Chatear con el cliente"}
+                    {actionLoading ? "Enviando..." : (
+                      <>
+                        <CheckCircle size={18} />
+                        Enviar Propuesta
+                      </>
+                    )}
                   </button>
+
                   {successMessage && (
                     <p className="mt-4 text-sm text-emerald-300">{successMessage}</p>
                   )}
@@ -196,31 +233,69 @@ const CaseDetail = () => {
                   <h3 className="text-xl font-semibold text-white">Técnicos interesados</h3>
                   <p className="mt-2 text-sm text-gray-300">A continuación ves la lista de técnicos que han mostrado interés.</p>
 
-                  {!interestedTechnicians || interestedTechnicians.length === 0 ? (
-                    <div className="mt-6 rounded-3xl bg-[#1c2526] p-4 text-sm text-gray-300">
-                      No hay técnicos interesados aún.
+                  {!uniqueTechnicians || uniqueTechnicians.length === 0 ? (
+                    <div className="mt-6 rounded-3xl bg-[#1c2526] p-4 text-sm text-center text-gray-400 border border-white/5">
+                      No hay propuestas aún.
                     </div>
                   ) : (
-                    <div className="mt-6 space-y-3">
-                      {Array.isArray(interestedTechnicians) && interestedTechnicians.map((tech, index) => (
-                        <div key={tech?.id || index} className="rounded-3xl bg-[#1c2526] p-4 border border-white/10 flex items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="font-semibold text-white">
-                              {tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`}
-                            </p>
-                            <p className="text-sm text-gray-400 mt-1">
-                              {tech?.email || tech?.user?.email || tech?.phone || "Sin datos"}
-                            </p>
+                    <div className="mt-6 space-y-4">
+                      {uniqueTechnicians.map((tech, index) => {
+                        const isProposal = tech.isResponse;
+                        const techName = tech?.technician?.user?.name || tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`;
+                        const techEmail = tech?.technician?.user?.email || tech?.email || tech?.user?.email || "Sin correo";
+                        
+                        return (
+                          <div key={tech?.id || index} className="rounded-3xl bg-[#1c2526] overflow-hidden border border-white/10 shadow-md">
+                            <div className="p-5">
+                              <div className="flex items-center justify-between gap-4 mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97]">
+                                    <User size={20} />
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-white text-base">{techName}</p>
+                                    <p className="text-xs text-gray-400">{techEmail}</p>
+                                  </div>
+                                </div>
+                                
+                                {isProposal ? (
+                                  <div className="bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                                    <DollarSign size={14} className="text-emerald-400" />
+                                    <span className="text-emerald-400 font-bold text-sm">
+                                      ${parseInt(tech.estimated_cost).toLocaleString()}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider bg-gray-500/10 px-2 py-1 rounded-md">
+                                    Interesado
+                                  </span>
+                                )}
+                              </div>
+
+                              {isProposal && tech.questions && (
+                                <div className="mt-3 bg-white/5 rounded-2xl p-4 text-sm text-gray-200 border border-white/5 italic">
+                                  "{tech.questions}"
+                                </div>
+                              )}
+
+                              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                                  <Clock size={12} />
+                                  {tech.created_at ? new Date(tech.created_at).toLocaleDateString() : 'Reciente'}
+                                </div>
+                                
+                                <button
+                                  onClick={() => handleStartChat(tech.technician_id || tech.id)}
+                                  className="flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-xl text-white text-xs font-bold hover:bg-[#a493bd] transition shadow-lg shadow-black/20"
+                                >
+                                  <MessageSquare size={14} />
+                                  Contactar
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => handleStartChat(tech.id)}
-                            className="bg-[#8C7E97]/20 p-3 rounded-full text-[#8C7E97] hover:bg-[#8C7E97] hover:text-white transition"
-                            title="Chatear con este técnico"
-                          >
-                            <MessageSquare size={20} />
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

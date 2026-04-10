@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle } from "lucide-react";
+import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
 
@@ -76,7 +76,8 @@ const IndexCustomer = () => {
             {cases.map((serviceCase) => (
               <div 
                 key={serviceCase.id}
-                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start gap-4 transition-all shadow-md group"
+                onClick={() => navigate(`/case-detail/${serviceCase.id}`)}
+                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start gap-4 transition-all shadow-md group cursor-pointer"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -94,25 +95,49 @@ const IndexCustomer = () => {
                     {serviceCase.description}
                   </p>
                   
-                  <div className="flex items-center gap-4 text-sm text-[#8C7E97] font-medium">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-6 text-sm text-[#8C7E97] font-medium">
+                    <div className="flex items-center gap-1.5 bg-[#8C7E97]/10 px-3 py-1.5 rounded-xl border border-[#8C7E97]/20">
                       <MessageSquare size={16} />
-                      <span>{serviceCase.responses?.length || 0} Técnicos interesados</span>
+                      <span>{serviceCase.responses?.length || 0} Propuestas / Interesados</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-row md:flex-col gap-3 justify-end items-center md:items-end w-full md:w-auto mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-white/5">
-                  <p className="text-xs font-mono text-gray-500 hidden md:block">FTS-{serviceCase.id.toString().padStart(6, '0')}</p>
-                  
-                  <div className="flex gap-4">
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors" title="Editar">
-                      <Pencil size={20} />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-red-400 transition-colors" title="Eliminar">
-                      <Trash2 size={20} />
-                    </button>
+                <div className="flex flex-col gap-4 items-end self-stretch md:self-center">
+                  <div className="flex flex-row md:flex-col gap-3 justify-end items-center md:items-end w-full md:w-auto">
+                    <p className="text-xs font-mono text-gray-500 hidden md:block">FTS-{serviceCase.id.toString().padStart(6, '0')}</p>
+                    
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/case-detail/${serviceCase.id}`); }}
+                        className="p-2 text-[#8C7E97] hover:text-white transition-colors hover:bg-white/5 rounded-lg" 
+                        title="Ver detalles y respuestas"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
+                        className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg" 
+                        title="Editar"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); /* delete logic should go here */ }}
+                        className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg" 
+                        title="Eliminar"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
+                  
+                  <button 
+                    onClick={() => navigate(`/case-detail/${serviceCase.id}`)}
+                    className="flex md:hidden items-center gap-2 px-4 py-2 bg-[#8C7E97] text-white rounded-xl text-xs font-bold"
+                  >
+                    Ver Detalles
+                  </button>
                 </div>
               </div>
             ))}

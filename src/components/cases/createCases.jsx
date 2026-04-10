@@ -10,6 +10,7 @@ const CreateCase = () => {
   const [caseData, setCaseData] = useState({
     title: "",
     description: "",
+    city: "",
     images: [],
   });
 
@@ -50,6 +51,9 @@ const CreateCase = () => {
     const formData = new FormData();
     formData.append("title", caseData.title);
     formData.append("description", caseData.description);
+    if (caseData.city) {
+      formData.append("city", caseData.city);
+    }
     
     // Laravel espera un array de archivos: images[]
     caseData.images.forEach((file) => {
@@ -112,6 +116,20 @@ const CreateCase = () => {
               required
               disabled={loading}
               className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none resize-none"
+            />
+          </div>
+
+          {/* Ubicación */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-[#c8d2d4]">Ubicación / Ciudad (opcional)</label>
+            <input
+              type="text"
+              name="city"
+              value={caseData.city || ""}
+              onChange={handleChange}
+              placeholder="Ej: Bogotá (dejar vacío para usar tu ciudad de registro)"
+              disabled={loading}
+              className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none"
             />
           </div>
 

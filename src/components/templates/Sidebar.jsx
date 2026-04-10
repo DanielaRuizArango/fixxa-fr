@@ -53,6 +53,12 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
             >
               Técnicos
             </button>
+            <button
+              onClick={() => { navigate("/indexCasesAdmin"); onClose?.(); }}
+              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+            >
+              Casos
+            </button>
           </div>
         )}
 
