@@ -6,13 +6,17 @@ import CustomerForm from "./components/forms/customerForm"
 import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
+import IndexAdmin from "./components/indexes/indexAdmin"
 import CustomerProfile from "./components/showProfile/customerProfile"
 import TechnicianProfile from "./components/showProfile/technicianProfile"
+import AdminProfile from "./components/showProfile/adminProfile"
 import EditCustomer from "./components/profile/editCustomer"
 import EditTechnician from "./components/profile/editTechnician"
+import EditAdmin from "./components/profile/editAdmin"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ForgotPassword from "./components/forgotPassword"
 import CreateCases from "./components/cases/createCases.jsx"
+import AdminForm from "./components/forms/adminForm.jsx"
 import CaseDetail from "./components/cases/showCases.jsx"
 
 function App() {
@@ -91,8 +95,42 @@ function App() {
       <Route
         path="/case-detail/:id"
         element={
-          <ProtectedRoute allowedRoles={["client", "technician"]}>
+          <ProtectedRoute allowedRoles={["client", "technician", "admin"]}>
             <CaseDetail />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rutas protegidas - Administradores */}
+      <Route
+        path="/indexAdmin"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <IndexAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/adminForm"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/editAdmin/:id"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <EditAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/adminProfile"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminProfile />
           </ProtectedRoute>
         }
       />

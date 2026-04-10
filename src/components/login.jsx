@@ -54,6 +54,8 @@ const Login = () => {
         navigate("/indexCustomer");
       } else if (role === 'technician') {
         navigate("/indexTechnician");
+      } else if (role === 'admin') {
+        navigate("/indexAdmin");
       }
     } catch (err) {
       console.error('Error en login:', err);
