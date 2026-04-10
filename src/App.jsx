@@ -7,6 +7,8 @@ import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
 import IndexAdmin from "./components/indexes/indexAdmin"
+import IndexClientAdmin from "./components/indexes/indexClientAdmin"
+import IndexTechnicianAdmin from "./components/indexes/indexTechnicianAdmin"
 import CustomerProfile from "./components/showProfile/customerProfile"
 import TechnicianProfile from "./components/showProfile/technicianProfile"
 import AdminProfile from "./components/showProfile/adminProfile"
@@ -131,6 +133,22 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/indexClientAdmin"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <IndexClientAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/indexTechnicianAdmin"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <IndexTechnicianAdmin />
           </ProtectedRoute>
         }
       />
