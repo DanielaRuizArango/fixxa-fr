@@ -1,5 +1,6 @@
 import { User, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "../notifications/NotificationBell";
 
 const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) => {
   const navigate = useNavigate();
@@ -18,12 +19,15 @@ const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) =
       {/* Espaciador para empujar el lado derecho */}
       <div className="hidden md:flex flex-1" />
 
-      {/* Lado derecho: nombre del rol e ícono */}
-      <div className="flex items-center gap-2">
-        <span className="text-xl font-semibold">{roleName}</span>
-        <button onClick={() => navigate(profileRoute)} aria-label="Profile">
-          <User size={28} />
-        </button>
+      {/* Lado derecho: nombre del rol e ícono e icon de notificaciones */}
+      <div className="flex items-center gap-4">
+        <NotificationBell />
+        <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+          <span className="text-xl font-semibold">{roleName}</span>
+          <button onClick={() => navigate(profileRoute)} aria-label="Profile" className="hover:scale-110 transition-transform">
+            <User size={28} />
+          </button>
+        </div>
       </div>
     </header>
   );
