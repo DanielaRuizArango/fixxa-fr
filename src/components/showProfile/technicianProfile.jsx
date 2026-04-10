@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 
 const TechnicianProfile = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const TechnicianProfile = () => {
 
   if (loading) {
     return (
-      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Technical"} profileRoute="/technicianProfile">
+      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Technician"} profileRoute="/technicianProfile">
         <div className="flex flex-col items-center justify-center pt-20">
           <div className="w-12 h-12 border-4 border-[#8C7E97] border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-4 text-gray-300">Cargando perfil...</p>
@@ -42,7 +42,7 @@ const TechnicianProfile = () => {
 
   if (error || !data) {
     return (
-      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Technical"} profileRoute="/technicianProfile">
+      <MainLayout roleName={localStorage.getItem('userName') || data?.name || "Technician"} profileRoute="/technicianProfile">
         <div className="text-center pt-20">
           <p className="text-red-400 mb-4">{error || "Error al cargar datos."}</p>
           <button onClick={() => navigate("/indexTechnician")} className="text-[#8C7E97] hover:underline">
@@ -73,7 +73,7 @@ const TechnicianProfile = () => {
             <div className="bg-[#2B2F36] p-1 rounded-full mb-4 border-2 border-[#8C7E97]">
               {data.image ? (
                 <img 
-                  src={data.image.startsWith('http') ? data.image : `${import.meta.env.VITE_API_STORAGE_URL || ''}/${data.image}`} 
+                  src={getStorageUrl(data.image)} 
                   alt={data.name}
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover"
                 />

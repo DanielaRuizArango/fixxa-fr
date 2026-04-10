@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2, User, Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 
 const CustomerProfile = () => {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ const CustomerProfile = () => {
             <div className="bg-[#2B2F36] p-1 rounded-full mb-4 border-2 border-[#8C7E97]">
               {data.image ? (
                 <img 
-                  src={data.image.startsWith('http') ? data.image : `${import.meta.env.VITE_API_STORAGE_URL || ''}/${data.image}`} 
+                  src={getStorageUrl(data.image)} 
                   alt={data.name}
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover"
                 />

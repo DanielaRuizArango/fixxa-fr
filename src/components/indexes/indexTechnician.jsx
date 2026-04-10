@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Image as ImageIcon, MapPin } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 import { useState, useEffect } from "react";
 
 const IndexTechnical = () => {
@@ -75,7 +75,7 @@ const IndexTechnical = () => {
                 <div className="w-full md:w-48 h-48 md:h-auto bg-[#1c2526] relative overflow-hidden">
                   {caseItem.images && caseItem.images.length > 0 ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${caseItem.images[0].image_path}`} 
+                      src={getStorageUrl(caseItem.images[0].image_path)} 
                       alt={caseItem.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
@@ -105,7 +105,7 @@ const IndexTechnical = () => {
                   <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
                       <MapPin size={14} className="text-[#8C7E97]" />
-                      <span>{caseItem.client?.city || caseItem.location || 'No especificada'}</span>
+                      <span>{caseItem.client?.user?.city || caseItem.location || 'No especificada'}</span>
                     </div>
 
                     {caseItem.responses?.length > 0 && (

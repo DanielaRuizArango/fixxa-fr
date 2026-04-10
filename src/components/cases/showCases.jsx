@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, DollarSign, Clock, User, CheckCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
-import { fetchData } from "../../api.js";
+import { fetchData, getStorageUrl } from "../../api.js";
 
 const CaseDetail = () => {
   const { id } = useParams();
@@ -127,7 +127,7 @@ const CaseDetail = () => {
               ← Volver
             </button>
             <h1 className="text-3xl font-bold mt-4">Detalle del Caso</h1>
-            <p className="text-sm text-gray-300 mt-2">Número: {caseNumber} • {caseData?.client?.city || location}</p>
+            <p className="text-sm text-gray-300 mt-2">Número: {caseNumber} • {caseData?.client?.user?.city || location}</p>
           </div>
 
           <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-5 py-4 text-right">
@@ -170,7 +170,7 @@ const CaseDetail = () => {
                     {images.map((image, index) => (
                       <img
                         key={index}
-                        src={typeof image === "string" ? image : image.url}
+                        src={getStorageUrl(typeof image === "string" ? image : (image.image_path || image.url))}
                         alt={`Caso ${index + 1}`}
                         className="h-32 w-full rounded-2xl object-cover"
                       />
