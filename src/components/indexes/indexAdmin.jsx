@@ -229,7 +229,9 @@ const IndexAdmin = () => {
 
                 <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-wider">
                   <span>ID: {admin.id_number || 'N/A'}</span>
-                  <span>{admin.admin?.some_admin_field || 'Admin Role'}</span>
+                  <span className="bg-[#8C7E97]/10 text-[#8C7E97] px-2 py-0.5 rounded-md border border-[#8C7E97]/20">
+                    {admin.spatie_role || admin.role || 'Admin'}
+                  </span>
                 </div>
               </div>
             ))}

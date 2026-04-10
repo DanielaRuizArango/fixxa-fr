@@ -39,7 +39,16 @@ const Login = () => {
         localStorage.setItem('token', token);
       }
 
-      const role = data.data?.role;
+      // Intentar obtener el objeto de usuario en diferentes niveles
+      const user = data.data?.user || data.user;
+      
+      // Búsqueda exhaustiva del rol específico (Spatie o genérico)
+      const spatieRoleFromArr = user?.roles?.[0]?.name;
+      const spatieRole = spatieRoleFromArr || user?.spatie_role || data.data?.spatie_role || data.spatie_role;
+      const genericRole = user?.role || data.data?.role || data.role;
+      
+      const role = spatieRole || genericRole;
+      
       if (role) {
         localStorage.setItem('role', role);
       }
@@ -67,8 +76,10 @@ const Login = () => {
         navigate("/indexCustomer");
       } else if (role === 'technician') {
         navigate("/indexTechnician");
-      } else if (role === 'admin') {
+      } else if (role === 'super_admin') {
         navigate("/indexAdmin");
+      } else if (role === 'admin' || role === 'moderator') {
+        navigate("/indexClientAdmin");
       }
     } catch (err) {
       console.error('Error en login:', err);

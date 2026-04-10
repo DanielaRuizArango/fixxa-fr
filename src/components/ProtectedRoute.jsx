@@ -18,7 +18,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         // Redirigir según el rol real del usuario
         if (role === "client") return <Navigate to="/indexCustomer" replace />;
         if (role === "technician") return <Navigate to="/indexTechnician" replace />;
-        if (role === "admin") return <Navigate to="/indexAdmin" replace />;
+        if (role === "super_admin") return <Navigate to="/indexAdmin" replace />;
+        if (role === "admin" || role === "moderator") return <Navigate to="/indexClientAdmin" replace />;
         return <Navigate to="/login" replace />;
     }
 

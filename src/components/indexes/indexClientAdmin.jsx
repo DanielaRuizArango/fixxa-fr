@@ -109,13 +109,15 @@ const IndexClientAdmin = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleBlockToggle(client.id)}
-                    className={`p-2 rounded-lg transition-colors ${client.status === 'active' ? 'text-gray-400 hover:text-yellow-400' : 'text-yellow-400 hover:text-green-400'}`}
-                    title={client.status === 'active' ? 'Bloquear' : 'Desbloquear'}
-                  >
-                    {client.status === 'active' ? <Lock size={20} /> : <Unlock size={20} />}
-                  </button>
+                  {localStorage.getItem('role') !== 'moderator' && (
+                    <button 
+                      onClick={() => handleBlockToggle(client.id)}
+                      className={`p-2 rounded-lg transition-colors ${client.status === 'active' ? 'text-gray-400 hover:text-yellow-400' : 'text-yellow-400 hover:text-green-400'}`}
+                      title={client.status === 'active' ? 'Bloquear' : 'Desbloquear'}
+                    >
+                      {client.status === 'active' ? <Lock size={20} /> : <Unlock size={20} />}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

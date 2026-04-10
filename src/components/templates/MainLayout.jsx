@@ -17,6 +17,25 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Intentar "ascender" el rol si es genérico 'admin'
+  useState(() => {
+    const currentRole = localStorage.getItem('role');
+    if (currentRole === 'admin') {
+      import('../../api').then(({ fetchData }) => {
+        fetchData('/admin/me').then(response => {
+           const userData = response.data?.user || response.data || response.user;
+           const spatieRoleFromArr = userData?.roles?.[0]?.name;
+           const newRole = spatieRoleFromArr || userData?.spatie_role || response.data?.spatie_role || userData?.role || response.data?.role;
+           
+           if (newRole && newRole !== 'admin') {
+             localStorage.setItem('role', newRole);
+             window.location.reload();
+           }
+        }).catch(() => {});
+      });
+    }
+  }, []);
+
   const defaultNavItems = [
     {
       label: "Inicio",
@@ -24,13 +43,17 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
         const role = localStorage.getItem("role");
         if (role === "client") navigate("/indexCustomer");
         else if (role === "technician") navigate("/indexTechnician");
-        else navigate("/indexAdmin");
+        else if (role === "super_admin") navigate("/indexAdmin");
+        else navigate("/indexClientAdmin");
       },
     },
-    {
-      label: "Mensajes",
-      onClick: () => navigate("/messages"),
-    },
+    // Solo mostrar Mensajes si NO es admin/moderador/super_admin
+    ...(['super_admin', 'admin', 'moderator'].includes(localStorage.getItem('role')) ? [] : [
+      {
+        label: "Mensajes",
+        onClick: () => navigate("/messages"),
+      }
+    ]),
     {
       label: "Log out",
       onClick: () => {
