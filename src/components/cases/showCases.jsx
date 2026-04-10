@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { MessageSquare } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData } from "../../api.js";
 
@@ -52,6 +53,25 @@ const CaseDetail = () => {
     } catch (err) {
       console.error("Error enviando interés:", err);
       setError(err.message || "No se pudo enviar la solicitud de interés.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartChat = async (targetTechnicianId = null) => {
+    setActionLoading(true);
+    try {
+      const response = await fetchData("/chat/start", {
+        method: "POST",
+        body: JSON.stringify({
+          service_case_id: id,
+          technician_id: targetTechnicianId || localStorage.getItem("technicianId"),
+        }),
+      });
+      navigate(`/chat/${response.data.id}`);
+    } catch (err) {
+      console.error("Error al iniciar chat:", err);
+      setError("No se pudo iniciar el chat.");
     } finally {
       setActionLoading(false);
     }
@@ -158,6 +178,15 @@ const CaseDetail = () => {
                   >
                     {actionLoading ? "Enviando..." : "Mostrar interés"}
                   </button>
+
+                  <button
+                    onClick={() => handleStartChat(null)}
+                    disabled={actionLoading}
+                    className="mt-3 w-full rounded-2xl bg-[#1c2526] border border-[#8C7E97]/40 px-5 py-3 text-sm font-semibold text-[#8C7E97] transition hover:bg-[#8C7E97]/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare size={18} />
+                    {actionLoading ? "Cargando..." : "Chatear con el cliente"}
+                  </button>
                   {successMessage && (
                     <p className="mt-4 text-sm text-emerald-300">{successMessage}</p>
                   )}
@@ -174,13 +203,22 @@ const CaseDetail = () => {
                   ) : (
                     <div className="mt-6 space-y-3">
                       {Array.isArray(interestedTechnicians) && interestedTechnicians.map((tech, index) => (
-                        <div key={tech?.id || index} className="rounded-3xl bg-[#1c2526] p-4 border border-white/10">
-                          <p className="font-semibold text-white">
-                            {tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`}
-                          </p>
-                          <p className="text-sm text-gray-400 mt-1">
-                            {tech?.email || tech?.user?.email || tech?.phone || "Sin datos"}
-                          </p>
+                        <div key={tech?.id || index} className="rounded-3xl bg-[#1c2526] p-4 border border-white/10 flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="font-semibold text-white">
+                              {tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`}
+                            </p>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {tech?.email || tech?.user?.email || tech?.phone || "Sin datos"}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleStartChat(tech.id)}
+                            className="bg-[#8C7E97]/20 p-3 rounded-full text-[#8C7E97] hover:bg-[#8C7E97] hover:text-white transition"
+                            title="Chatear con este técnico"
+                          >
+                            <MessageSquare size={20} />
+                          </button>
                         </div>
                       ))}
                     </div>

@@ -19,11 +19,27 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
 
   const defaultNavItems = [
     {
+      label: "Inicio",
+      onClick: () => {
+        const role = localStorage.getItem("role");
+        if (role === "client") navigate("/indexCustomer");
+        else if (role === "technician") navigate("/indexTechnician");
+        else navigate("/indexAdmin");
+      },
+    },
+    {
+      label: "Mensajes",
+      onClick: () => navigate("/messages"),
+    },
+    {
       label: "Log out",
       onClick: () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         localStorage.removeItem("userName");
+        localStorage.removeItem("technicianId");
+        localStorage.removeItem("clientId");
+        localStorage.removeItem("userId");
         navigate("/login");
       },
     },

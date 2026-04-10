@@ -20,6 +20,8 @@ import ForgotPassword from "./components/forgotPassword"
 import CreateCases from "./components/cases/createCases.jsx"
 import AdminForm from "./components/forms/adminForm.jsx"
 import CaseDetail from "./components/cases/showCases.jsx"
+import ChatList from "./components/chat/ChatList.jsx"
+import ChatRoom from "./components/chat/ChatRoom.jsx"
 
 function App() {
   return (
@@ -149,6 +151,24 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <IndexTechnicianAdmin />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute allowedRoles={["client", "technician"]}>
+            <ChatList />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chat/:id"
+        element={
+          <ProtectedRoute allowedRoles={["client", "technician"]}>
+            <ChatRoom />
           </ProtectedRoute>
         }
       />

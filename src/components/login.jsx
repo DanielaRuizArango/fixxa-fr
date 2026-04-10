@@ -44,9 +44,22 @@ const Login = () => {
         localStorage.setItem('role', role);
       }
 
-      const name = data.data?.name;
+      const userId = data.data?.user?.id;
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      }
+
+      const name = data.data?.user?.name || data.data?.name;
       if (name) {
         localStorage.setItem('userName', name);
+      }
+
+      if (data.data?.user?.technician?.id) {
+        localStorage.setItem('technicianId', data.data.user.technician.id);
+      }
+
+      if (data.data?.user?.client?.id) {
+        localStorage.setItem('clientId', data.data.user.client.id);
       }
 
       // Redirigir al usuario según su rol
