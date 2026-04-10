@@ -68,6 +68,14 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/editCase/:id"
+        element={
+          <ProtectedRoute allowedRoles={["client"]}>
+            <CreateCases />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Rutas protegidas - solo técnicos */}
       <Route
