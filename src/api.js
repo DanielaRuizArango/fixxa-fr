@@ -1,10 +1,24 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
+/**
+ * Limpia la sesión y notifica a la app que el token expiró.
+ * El hook useAuthError escucha este evento y redirige al login.
+ */
+const handleTokenExpired = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('technicianId');
+    localStorage.removeItem('clientId');
+    window.dispatchEvent(new Event('auth:expired'));
+};
+
 export const fetchData = async (endpoint, options = {}) => {
     try {
         const isFormData = options.body instanceof FormData;
         const token = localStorage.getItem('token');
-        
+
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers: {
@@ -14,9 +28,18 @@ export const fetchData = async (endpoint, options = {}) => {
             },
         });
 
+        // Token expirado o no autenticado → redirigir automáticamente al login
+        if (response.status === 401) {
+            handleTokenExpired();
+            const error = new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+            error.status = 401;
+            throw error;
+        }
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             const error = new Error(errorData.message || `Error: ${response.statusText}`);
+            error.status = response.status;
             error.data = errorData;
             throw error;
         }
@@ -24,15 +47,18 @@ export const fetchData = async (endpoint, options = {}) => {
         const data = await response.json();
 
         // Custom error handling for 200 OK responses with status: "error" (e.g. form validation)
-        if (data && data.status === "error") {
-            const error = new Error(data.message || "Error");
+        if (data && data.status === 'error') {
+            const error = new Error(data.message || 'Error');
             error.data = data;
             throw error;
         }
 
         return data;
     } catch (error) {
-        console.error('API call failed:', error);
+        // No re-loggear errores de autenticación (ya se loggean arriba)
+        if (error.status !== 401) {
+            console.error('API call failed:', error);
+        }
         throw error;
     }
 };

@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Pencil, 
-  Trash2, 
-  Plus, 
-  UserPlus, 
-  Shield, 
-  Lock, 
-  Unlock, 
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  UserPlus,
+  Shield,
+  Lock,
+  Unlock,
   Search,
-  MoreVertical,
   Mail,
   Phone,
-  AlertCircle
+  AlertCircle,
+  CheckCircle,
+  X
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
@@ -24,6 +25,11 @@ const IndexAdmin = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  // Estado para el modal de confirmación de eliminación
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, name }
+  // Mensajes inline en lugar de alert()
+  const [actionError, setActionError] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState(null);
 
   useEffect(() => {
     const loadAdmins = async () => {
@@ -47,9 +53,19 @@ const IndexAdmin = () => {
     loadAdmins();
   }, []);
 
+  const showActionError = (msg) => {
+    setActionError(msg);
+    setTimeout(() => setActionError(null), 4000);
+  };
+
+  const showActionSuccess = (msg) => {
+    setActionSuccess(msg);
+    setTimeout(() => setActionSuccess(null), 3000);
+  };
+
   const handleBlockToggle = async (id) => {
     if (currentUser && currentUser.id === id) {
-      alert("No puedes bloquear tu propia cuenta.");
+      showActionError("No puedes bloquear tu propia cuenta.");
       return;
     }
 
@@ -61,29 +77,35 @@ const IndexAdmin = () => {
       setAdmins(admins.map(admin => 
         admin.id === id ? { ...admin, status: response.data.status } : admin
       ));
+      showActionSuccess(response.data.status === 'blocked' ? 'Administrador bloqueado.' : 'Administrador desbloqueado.');
     } catch (err) {
-      alert("Error al actualizar el estado del administrador.");
+      showActionError("Error al actualizar el estado del administrador.");
       console.error(err);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (currentUser && currentUser.id === id) {
-      alert("No puedes eliminar tu propia cuenta.");
+  // El botón de eliminar ahora abre el modal de confirmación en lugar de window.confirm()
+  const requestDelete = (admin) => {
+    if (currentUser && currentUser.id === admin.id) {
+      showActionError("No puedes eliminar tu propia cuenta.");
       return;
     }
+    setConfirmDelete({ id: admin.id, name: admin.name });
+  };
 
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este administrador? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    const { id } = confirmDelete;
+    setConfirmDelete(null);
 
     try {
       await fetchData(`/admin/admins/${id}`, {
         method: 'DELETE'
       });
       setAdmins(admins.filter(admin => admin.id !== id));
+      showActionSuccess('Administrador eliminado correctamente.');
     } catch (err) {
-      alert("Error al eliminar el administrador.");
+      showActionError("Error al eliminar el administrador.");
       console.error(err);
     }
   };
@@ -107,11 +129,62 @@ const IndexAdmin = () => {
   };
 
   return (
-    <MainLayout 
-      roleName="Administrator" 
+    <MainLayout
+      roleName="Administrator"
       profileRoute="/adminProfile"
     >
       <div className="flex flex-col gap-6 pt-4 pb-20">
+
+        {/* Toast de éxito */}
+        {actionSuccess && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-green-500/10 border border-green-500/40 text-green-300 px-5 py-3 rounded-2xl shadow-xl backdrop-blur animate-in slide-in-from-top-2 duration-300">
+            <CheckCircle size={18} />
+            <span className="text-sm font-medium">{actionSuccess}</span>
+          </div>
+        )}
+
+        {/* Toast de error de acción */}
+        {actionError && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-500/10 border border-red-500/40 text-red-300 px-5 py-3 rounded-2xl shadow-xl backdrop-blur animate-in slide-in-from-top-2 duration-300">
+            <AlertCircle size={18} />
+            <span className="text-sm font-medium">{actionError}</span>
+            <button onClick={() => setActionError(null)}><X size={16} /></button>
+          </div>
+        )}
+
+        {/* Modal de confirmación de eliminación */}
+        {confirmDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#262f31] border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="bg-red-500/10 p-3 rounded-2xl">
+                  <Trash2 size={24} className="text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">Eliminar Administrador</h3>
+                  <p className="text-sm text-gray-400">Esta acción no se puede deshacer.</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-300 mb-6">
+                ¿Estás seguro de que deseas eliminar a <span className="font-bold text-white">{confirmDelete.name}</span>?
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-5 py-2.5 rounded-xl bg-red-500/80 hover:bg-red-500 transition text-sm font-bold flex items-center gap-2"
+                >
+                  <Trash2 size={16} /> Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
           <div>
@@ -204,13 +277,13 @@ const IndexAdmin = () => {
                     >
                       {admin.status === 'active' ? <Lock size={16} /> : <Unlock size={16} />}
                     </button>
-                    <button 
-                      onClick={() => handleDelete(admin.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <button
+                        onClick={() => requestDelete(admin)}
+                        className="p-1.5 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg"
+                        title="Eliminar"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                   </div>
                 </div>
 

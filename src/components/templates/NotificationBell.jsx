@@ -84,9 +84,31 @@ const NotificationBell = () => {
 
     useEffect(() => {
         checkNotifications();
-        const interval = setInterval(checkNotifications, 30000); // Poll cada 30 seg
-        return () => clearInterval(interval);
-    }, [role, userId]);
+
+        /**
+         * Polling de notificaciones como fallback temporal.
+         * Se pausa automáticamente cuando la pestaña no está activa
+         * para reducir peticiones innecesarias al servidor.
+         */
+        const interval = setInterval(() => {
+            if (document.visibilityState !== 'hidden') {
+                checkNotifications();
+            }
+        }, 30000);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkNotifications();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {

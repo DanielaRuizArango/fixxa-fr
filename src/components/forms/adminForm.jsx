@@ -31,7 +31,7 @@ const AdminForm = () => {
     type_id: '',
     id_number: '',
     image: null,
-    spatie_role: 'admin'
+    spatie_role: 'admin'  // Valor por defecto; el super_admin puede cambiarlo en el formulario
   });
 
   const handleChange = (e) => {
@@ -269,6 +269,24 @@ const AdminForm = () => {
                       placeholder="1234..."
                       className="w-full bg-[#1C2526] border border-white/5 rounded-xl px-4 py-3 focus:border-[#8C7E97] focus:outline-none transition-all"
                     />
+                  </div>
+
+                  {/* Rol del Administrador */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <ShieldCheck size={14} className="text-[#8C7E97]" /> Rol *
+                    </label>
+                    <select
+                      name="spatie_role"
+                      value={formData.spatie_role}
+                      onChange={handleChange}
+                      required
+                      className="w-full bg-[#1C2526] border border-white/5 rounded-xl px-4 py-3 focus:border-[#8C7E97] focus:outline-none transition-all appearance-none"
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="moderator">Moderador</option>
+                    </select>
+                    <p className="text-[10px] text-gray-500">Admin tiene acceso completo. Moderador tiene permisos limitados.</p>
                   </div>
                 </div>
 

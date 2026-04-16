@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchData } from "../../api";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
@@ -17,22 +18,21 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Intentar "ascender" el rol si es genérico 'admin'
-  useState(() => {
+  // Corrección: usar useEffect (no useState) para ejecutar el fetch al montar.
+  // useState no acepta un array de dependencias como segundo argumento.
+  useEffect(() => {
     const currentRole = localStorage.getItem('role');
     if (currentRole === 'admin') {
-      import('../../api').then(({ fetchData }) => {
-        fetchData('/admin/me').then(response => {
-           const userData = response.data?.user || response.data || response.user;
-           const spatieRoleFromArr = userData?.roles?.[0]?.name;
-           const newRole = spatieRoleFromArr || userData?.spatie_role || response.data?.spatie_role || userData?.role || response.data?.role;
-           
-           if (newRole && newRole !== 'admin') {
-             localStorage.setItem('role', newRole);
-             window.location.reload();
-           }
-        }).catch(() => {});
-      });
+      fetchData('/admin/me').then(response => {
+         const userData = response.data?.user || response.data || response.user;
+         const spatieRoleFromArr = userData?.roles?.[0]?.name;
+         const newRole = spatieRoleFromArr || userData?.spatie_role || response.data?.spatie_role || userData?.role || response.data?.role;
+
+         if (newRole && newRole !== 'admin') {
+           localStorage.setItem('role', newRole);
+           window.location.reload();
+         }
+      }).catch(() => {});
     }
   }, []);
 

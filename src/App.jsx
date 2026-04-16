@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom"
 import './index.css'
+import useAuthError from "./hooks/useAuthError"
 import Login from "./components/login"
 import Register from "./components/register"
 import CustomerForm from "./components/forms/customerForm"
@@ -25,6 +26,9 @@ import ChatList from "./components/chat/ChatList.jsx"
 import ChatRoom from "./components/chat/ChatRoom.jsx"
 
 function App() {
+  // Redirección automática al login cuando el token expira (401)
+  useAuthError();
+
   return (
     <Routes>
       {/* Rutas públicas */}

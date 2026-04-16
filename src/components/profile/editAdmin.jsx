@@ -35,12 +35,18 @@ const EditAdmin = () => {
   });
 
   useEffect(() => {
+    // Protección de ruta: si no hay ID, redirigir inmediatamente
+    if (!id) {
+      navigate('/indexAdmin', { replace: true });
+      return;
+    }
+
     const loadAdmin = async () => {
       try {
         setLoading(true);
         const response = await fetchData(`/admin/admins/${id}`);
         const admin = response.data;
-        
+
         setFormData({
           name: admin.name || '',
           email: admin.email || '',
@@ -64,8 +70,8 @@ const EditAdmin = () => {
       }
     };
 
-    if (id) loadAdmin();
-  }, [id]);
+    loadAdmin();
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

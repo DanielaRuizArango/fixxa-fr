@@ -39,17 +39,53 @@ const ChatRoom = () => {
 
     loadChat();
 
-    // Polling as a fallback if no WebSockets are configured in frontend
-    const interval = setInterval(async () => {
+    /**
+     * Polling como fallback temporal (WebSockets requieren configuración de
+     * Laravel Echo + Pusher en el backend).
+     *
+     * Mejoras aplicadas:
+     *  - Intervalo aumentado a 8s (era 5s) para reducir carga de red.
+     *  - Se pausa automáticamente cuando la pestaña está oculta.
+     *  - Solo actualiza el estado si hay mensajes nuevos (compara último ID).
+     */
+    let intervalId = null;
+
+    const pollMessages = async () => {
+      // No hacer peticiones si la pestaña no está activa
+      if (document.visibilityState === 'hidden') return;
       try {
         const response = await fetchData(`/chat/${id}`);
-        setMessages(response.data.messages);
+        const newMessages = response.data.messages;
+        setMessages(prev => {
+          // Solo actualizar si realmente hay mensajes nuevos
+          if (
+            newMessages.length !== prev.length ||
+            (newMessages.length > 0 && newMessages[newMessages.length - 1].id !== prev[prev.length - 1]?.id)
+          ) {
+            return newMessages;
+          }
+          return prev;
+        });
       } catch (err) {
         console.error("Error polling messages:", err);
       }
-    }, 5000);
+    };
 
-    return () => clearInterval(interval);
+    intervalId = setInterval(pollMessages, 8000);
+
+    // Pausar/reanudar polling según visibilidad de la pestaña
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pollMessages(); // Actualizar inmediatamente al volver
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [id]);
 
   useEffect(scrollToBottom, [messages]);
