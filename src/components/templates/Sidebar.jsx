@@ -68,6 +68,14 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
         )}
 
         {/* Ítems de navegación generales */}
+        {localStorage.getItem('role') === 'technician' && (
+          <button
+            onClick={() => { navigate("/my-ratings"); onClose?.(); }}
+            className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] transition box-border text-white mb-1"
+          >
+            Mis Calificaciones
+          </button>
+        )}
         {navItems.map((item, index) => (
           <button
             key={index}

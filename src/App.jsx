@@ -24,6 +24,7 @@ import AdminForm from "./components/forms/adminForm.jsx"
 import CaseDetail from "./components/cases/showCases.jsx"
 import ChatList from "./components/chat/ChatList.jsx"
 import ChatRoom from "./components/chat/ChatRoom.jsx"
+import MyRatings from "./components/technician/MyRatings.jsx"
 
 function App() {
   // Redirección automática al login cuando el token expira (401)
@@ -105,6 +106,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["technician"]}>
             <EditTechnician />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-ratings"
+        element={
+          <ProtectedRoute allowedRoles={["technician"]}>
+            <MyRatings />
           </ProtectedRoute>
         }
       />
