@@ -54,10 +54,12 @@ const IndexTechnicianAdmin = () => {
     }
   };
 
-  const filteredTechnicians = technicians.filter(tech => 
-    tech.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tech.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTechnicians = technicians.filter(tech => {
+    const name = (tech.name || tech.user?.name || "").toLowerCase();
+    const email = (tech.email || tech.user?.email || "").toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    return name.includes(searchLower) || email.includes(searchLower);
+  });
 
   return (
     <MainLayout roleName="Administrator" profileRoute="/adminProfile">
@@ -89,11 +91,11 @@ const IndexTechnicianAdmin = () => {
              <p className="text-red-200">{error}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTechnicians.map((tech) => (
-              <div key={tech.id} className="bg-[#262f31]/80 border border-white/5 rounded-2xl p-5 flex justify-between items-center transition-all hover:bg-[#262f31] shadow-md">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1C2526] flex items-center justify-center border border-[#8C7E97]/30">
+              <div key={tech.id} className="bg-[#262f31]/80 border border-white/5 rounded-2xl p-5 flex flex-col justify-between transition-all hover:bg-[#262f31] shadow-md">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1C2526] flex items-center justify-center border border-[#8C7E97]/30 flex-shrink-0">
                     {tech.image ? (
                       <img src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${tech.image}`} className="w-full h-full object-cover" alt="" />
                     ) : (
@@ -101,15 +103,15 @@ const IndexTechnicianAdmin = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white truncate">{tech.name}</h3>
-                    <p className="text-[#8C7E97] text-xs font-semibold uppercase">{tech.technician?.title || 'Especialista'}</p>
+                    <h3 className="font-bold text-white truncate">{tech.name || tech.user?.name}</h3>
+                    <p className="text-[#8C7E97] text-xs font-semibold uppercase truncate">{tech.technician?.title || 'Especialista'}</p>
                     <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><Mail size={12} /> {tech.email}</span>
-                      <span className="flex items-center gap-1"><MapPin size={12} /> {tech.city || 'No especificada'}</span>
+                      <span className="flex items-center gap-1 truncate"><Mail size={12} className="flex-shrink-0" /> <span className="truncate">{tech.email || tech.user?.email}</span></span>
+                      <span className="flex items-center gap-1 truncate"><MapPin size={12} className="flex-shrink-0" /> <span className="truncate">{tech.city || tech.user?.city || 'No especificada'}</span></span>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-end">
                   {localStorage.getItem('role') !== 'moderator' && (
                     <button 
                       onClick={() => handleBlockToggle(tech.id)}

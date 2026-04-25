@@ -72,15 +72,23 @@ const CaseDetail = () => {
     }
   };
 
-  const handleAcceptProposal = async (responseId) => {
+  const handleAcceptProposal = async (responseId, techId, initialMessage = "") => {
     setActionLoading(true);
     setError(null);
     try {
       const response = await fetchData(`/client/cases/${id}/proposals/${responseId}/accept`, {
-        method: "POST"
+        method: "POST",
+        body: JSON.stringify({
+          initial_message: initialMessage
+        })
       });
       setSuccessMessage("Propuesta aceptada correctamente.");
       setCaseData(response.data);
+      
+      // Redirigir al chat con el técnico después de aceptar
+      setTimeout(() => {
+        navigate(`/chat/${response.data.conversation_id || response.data.chat_id}`);
+      }, 500);
     } catch (err) {
       console.error("Error al aceptar propuesta:", err);
       setError(err.message || "No se pudo aceptar la propuesta.");
@@ -457,10 +465,10 @@ const CaseDetail = () => {
                                 </div>
                                 
                                 <div className="flex gap-2">
-                                  {role === "client" && isProposal && !['pending', 'resolved', 'cancelled'].includes(status) && (
+                                  {role === "client" && isProposal && !['pending', 'resolved', 'cancelled'].includes(status) && !isAccepted && (
                                     <>
                                       <button
-                                        onClick={() => handleAcceptProposal(tech.id)}
+                                        onClick={() => handleAcceptProposal(tech.id, techId, tech.questions)}
                                         disabled={actionLoading}
                                         className="flex items-center justify-center p-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
                                         title="Aceptar propuesta"
@@ -477,13 +485,15 @@ const CaseDetail = () => {
                                       </button>
                                     </>
                                   )}
-                                  <button
-                                    onClick={() => handleStartChat(techId)}
-                                    className="flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-xl text-white text-[11px] font-bold hover:bg-[#a493bd] transition shadow-lg shadow-black/20 uppercase tracking-widest"
-                                  >
-                                    <MessageSquare size={14} />
-                                    Chat
-                                  </button>
+                                  {isAccepted && (
+                                    <button
+                                      onClick={() => handleStartChat(techId)}
+                                      className="flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-xl text-white text-[11px] font-bold hover:bg-[#a493bd] transition shadow-lg shadow-black/20 uppercase tracking-widest"
+                                    >
+                                      <MessageSquare size={14} />
+                                      Chat
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
