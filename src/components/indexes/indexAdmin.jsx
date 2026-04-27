@@ -41,7 +41,7 @@ const IndexAdmin = () => {
 
         // Cargar lista de administradores
         const response = await fetchData('/admin/admins');
-        setAdmins(response.data || []);
+        setAdmins(response.data?.data || response.data || []);
       } catch (err) {
         setError("Error al cargar la lista de administradores.");
         console.error(err);

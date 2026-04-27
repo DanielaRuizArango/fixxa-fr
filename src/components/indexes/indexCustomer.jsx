@@ -17,7 +17,7 @@ const IndexCustomer = () => {
         const userResponse = await fetchData('/client/me');
         setUserName(userResponse.data?.name || "Customer");
         const response = await fetchData('/client/cases');
-        setCases(response.data || []);
+        setCases(response.data?.data || response.data || []);
       } catch (err) {
         setError("Error al cargar tus casos.");
         console.error(err);
@@ -131,20 +131,24 @@ const IndexCustomer = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
-                          className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg" 
-                          title="Editar"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); /* delete logic */ }}
-                          className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg" 
-                          title="Eliminar"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {(serviceCase.status === 'active' || serviceCase.status === 'pending') && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
+                            className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg" 
+                            title="Editar"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {(serviceCase.status === 'active' || serviceCase.status === 'pending') && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); /* delete logic */ }}
+                            className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg" 
+                            title="Eliminar"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </div>
                     

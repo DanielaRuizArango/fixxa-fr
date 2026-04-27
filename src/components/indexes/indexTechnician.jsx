@@ -21,7 +21,7 @@ const IndexTechnical = () => {
         
         // Cargar solicitudes activas
         const casesResponse = await fetchData('/technician/cases');
-        setCases(casesResponse.data || []);
+        setCases(casesResponse.data?.data || casesResponse.data || []);
       } catch (err) {
         console.error("Error al cargar datos:", err);
         setError("Error al cargar las solicitudes.");

@@ -42,12 +42,8 @@ const Login = () => {
       // Intentar obtener el objeto de usuario en diferentes niveles
       const user = data.data?.user || data.user;
       
-      // Búsqueda exhaustiva del rol específico (Spatie o genérico)
-      const spatieRoleFromArr = user?.roles?.[0]?.name;
-      const spatieRole = spatieRoleFromArr || user?.spatie_role || data.data?.spatie_role || data.spatie_role;
-      const genericRole = user?.role || data.data?.role || data.role;
-      
-      const role = spatieRole || genericRole;
+      // Obtener el rol directamente de la respuesta del backend
+      const role = data.data?.role || data.role;
       
       if (role) {
         localStorage.setItem('role', role);

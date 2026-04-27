@@ -27,7 +27,7 @@ const IndexClientAdmin = () => {
       try {
         setLoading(true);
         const response = await fetchData('/admin/clients');
-        setClients(response.data || []);
+        setClients(response.data?.data || response.data || []);
       } catch (err) {
         setError("Error al cargar la lista de clientes.");
         console.error(err);

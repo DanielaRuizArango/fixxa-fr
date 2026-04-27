@@ -23,7 +23,7 @@ const NotificationBell = () => {
             // 1. Verificar Chats (para Clientes y Técnicos)
             if (role === 'client' || role === 'technician') {
                 const chatRes = await fetchData("/chat");
-                const conversations = chatRes.data || [];
+                const conversations = chatRes.data?.data || chatRes.data || [];
                 
                 conversations.forEach(conv => {
                     const lastMsg = conv.messages?.[0];
@@ -49,7 +49,7 @@ const NotificationBell = () => {
             // 2. Verificar Casos (para Clientes)
             if (role === 'client') {
                 const casesRes = await fetchData("/client/cases");
-                const cases = casesRes.data || [];
+                const cases = casesRes.data?.data || casesRes.data || [];
                 
                 cases.forEach(c => {
                     if (c.responses && c.responses.length > 0) {

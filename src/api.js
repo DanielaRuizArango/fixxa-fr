@@ -22,6 +22,7 @@ export const fetchData = async (endpoint, options = {}) => {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers: {
+                'Accept': 'application/json',
                 ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
                 ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                 ...options.headers,

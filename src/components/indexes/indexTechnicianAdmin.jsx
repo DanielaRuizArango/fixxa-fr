@@ -27,7 +27,7 @@ const IndexTechnicianAdmin = () => {
       try {
         setLoading(true);
         const response = await fetchData('/admin/technicians');
-        setTechnicians(response.data || []);
+        setTechnicians(response.data?.data || response.data || []);
       } catch (err) {
         setError("Error al cargar la lista de técnicos.");
         console.error(err);

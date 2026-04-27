@@ -26,7 +26,7 @@ const IndexCasesAdmin = () => {
       try {
         setLoading(true);
         const response = await fetchData('/admin/cases');
-        setCases(response.data || []);
+        setCases(response.data?.data || response.data || []);
       } catch (err) {
         setError("Error al cargar la lista de casos de servicio.");
         console.error(err);

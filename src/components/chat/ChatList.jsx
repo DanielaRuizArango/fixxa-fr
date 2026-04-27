@@ -16,7 +16,7 @@ const ChatList = () => {
       try {
         setLoading(true);
         const response = await fetchData("/chat");
-        setConversations(response.data || []);
+        setConversations(response.data?.data || response.data || []);
       } catch (err) {
         console.error("Error cargando conversaciones:", err);
       } finally {
