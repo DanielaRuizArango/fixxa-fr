@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
+import SystemAlerts from "../admin/SystemAlerts";
 
 const IndexCasesAdmin = () => {
   const navigate = useNavigate();
@@ -81,6 +82,8 @@ const IndexCasesAdmin = () => {
             <p className="text-gray-400 text-sm">Supervisa todos los requerimientos de servicio en la plataforma</p>
           </div>
         </div>
+
+        <SystemAlerts />
 
         {/* Barra de búsqueda */}
         <div className="relative">
