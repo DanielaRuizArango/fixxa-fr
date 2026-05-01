@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchData } from "../../api";
+import AssetManager from "./AssetManager";
 
 const EditTechnician = () => {
   const navigate = useNavigate();
@@ -269,6 +270,12 @@ const EditTechnician = () => {
             </button>
           </div>
         </form>
+
+        <div className="mt-10 pt-8 border-t border-[#3f4b4d]">
+          <h2 className="text-2xl font-bold text-center mb-2">Galería de Profesional</h2>
+          <p className="text-center text-white/50 text-sm mb-6">Sube fotos de tus herramientas, certificaciones y trabajos previos para generar más confianza en tus clientes.</p>
+          <AssetManager />
+        </div>
       </div>
     </div>
   );
