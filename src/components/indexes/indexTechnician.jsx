@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Image as ImageIcon, MapPin } from "lucide-react";
+import { Plus, Users, Image as ImageIcon, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const IndexTechnical = () => {
   const navigate = useNavigate();
@@ -10,58 +10,170 @@ const IndexTechnical = () => {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados para filtros
+  const [search, setSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [city, setCity] = useState("");
+  const [radius, setRadius] = useState("");
+  const [userCoords, setUserCoords] = useState(null);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Construir query string
+      let queryParams = new URLSearchParams();
+      if (search) queryParams.append('search', search);
+      if (city) queryParams.append('city', city);
+      if (radius && userCoords) {
+        queryParams.append('radius', radius);
+        queryParams.append('lat', userCoords.lat);
+        queryParams.append('lng', userCoords.lng);
+      }
+
+      const casesResponse = await fetchData(`/technician/cases?${queryParams.toString()}`);
+      setCases(casesResponse.data?.data || casesResponse.data || []);
+    } catch (err) {
+      console.error("Error al cargar solicitudes:", err);
+      setError("Error al cargar las solicitudes.");
+    } finally {
+      setLoading(false);
+    }
+  }, [search, city, radius, userCoords]);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        // Cargar nombre del usuario
-        const userResponse = await fetchData('/technician/me');
-        setUserName(userResponse.data?.name || "Technical");
-        
-        // Cargar solicitudes activas
-        const casesResponse = await fetchData('/technician/cases');
-        setCases(casesResponse.data?.data || casesResponse.data || []);
-      } catch (err) {
-        console.error("Error al cargar datos:", err);
-        setError("Error al cargar las solicitudes.");
-      } finally {
-        setLoading(false);
-      }
+    const loadUser = async () => {
+        try {
+            const userResponse = await fetchData('/technician/me');
+            setUserName(userResponse.data?.name || "Technical");
+            
+            // Intentar obtener ubicación del usuario desde su perfil o navegador
+            if (userResponse.data?.latitude && userResponse.data?.longitude) {
+                setUserCoords({
+                    lat: userResponse.data.latitude,
+                    lng: userResponse.data.longitude
+                });
+            } else {
+                // Si no tiene en el perfil, intentar navegador
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        setUserCoords({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                    },
+                    (err) => console.log("Geolocalización no permitida")
+                );
+            }
+        } catch (err) {
+            console.error("Error al cargar perfil:", err);
+        }
     };
-
-    loadData();
+    loadUser();
   }, []);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-300 border-green-500/50';
-      case 'pending': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50';
-      case 'closed': return 'bg-gray-500/20 text-gray-300 border-gray-500/50';
-      default: return 'bg-[#1C2526] text-[#c8d2d4] border-[#3f4b4d]';
-    }
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+        loadData();
+    }, 500); // Debounce para la búsqueda
+    return () => clearTimeout(timeoutId);
+  }, [loadData]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setCity("");
+    setRadius("");
+    setShowFilters(false);
   };
 
   return (
     <MainLayout roleName={localStorage.getItem('userName') || userName} profileRoute="/technicianProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
         
-        <div className="flex justify-between items-center mb-2">
-          <h1 className="text-2xl font-bold font-['Kadwa']">Solicitudes Activas</h1>
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold font-['Kadwa']">Solicitudes Activas</h1>
+          </div>
+
+          {/* Buscador y Botón de Filtros */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por título o descripción..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-[#262f31] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#8C7E97] transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-3 rounded-xl border transition-all ${showFilters || city || radius ? 'bg-[#8C7E97] border-[#8C7E97] text-white' : 'bg-[#262f31] border-white/10 text-gray-400'}`}
+            >
+              <SlidersHorizontal size={20} />
+            </button>
+          </div>
+
+          {/* Panel de Filtros */}
+          {showFilters && (
+            <div className="bg-[#262f31] border border-white/10 rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-gray-200">Filtros Avanzados</h3>
+                <button onClick={clearFilters} className="text-xs text-[#8C7E97] hover:underline">Limpiar filtros</button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-gray-400 font-medium">Ciudad</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Bogotá"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-gray-400 font-medium">Radio de cercanía (km)</label>
+                  <select
+                    value={radius}
+                    onChange={(e) => setRadius(e.target.value)}
+                    className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
+                  >
+                    <option value="">Cualquier distancia</option>
+                    <option value="5">A menos de 5 km</option>
+                    <option value="10">A menos de 10 km</option>
+                    <option value="20">A menos de 20 km</option>
+                    <option value="50">A menos de 50 km</option>
+                  </select>
+                  {radius && !userCoords && (
+                    <p className="text-[10px] text-yellow-500/70">Debes permitir el acceso a tu ubicación para usar este filtro.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-20">
             <div className="w-10 h-10 border-4 border-[#8C7E97] border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-400">Obteniendo solicitudes...</p>
+            <p className="mt-4 text-gray-400">Filtrando solicitudes...</p>
           </div>
         ) : error ? (
           <div className="text-center pt-20">
             <p className="text-red-400 mb-4">{error}</p>
+            <button onClick={() => loadData()} className="text-[#8C7E97] underline">Reintentar</button>
           </div>
         ) : cases.length === 0 ? (
           <div className="text-center pt-20">
-            <p className="text-gray-400">No hay solicitudes activas en este momento.</p>
+            <p className="text-gray-400">No se encontraron solicitudes con estos filtros.</p>
+            {(search || city || radius) && (
+              <button onClick={clearFilters} className="mt-4 text-[#8C7E97] border border-[#8C7E97] px-4 py-2 rounded-xl text-sm">Ver todos los casos</button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -105,7 +217,10 @@ const IndexTechnical = () => {
                   <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
                       <MapPin size={14} className="text-[#8C7E97]" />
-                      <span>{caseItem.client?.user?.city || caseItem.location || 'No especificada'}</span>
+                      <span>{caseItem.city || caseItem.client?.user?.city || 'No especificada'}</span>
+                      {caseItem.distance && (
+                        <span className="text-gray-500 ml-1">({Math.round(caseItem.distance)} km)</span>
+                      )}
                     </div>
 
                     {caseItem.responses?.length > 0 && (
