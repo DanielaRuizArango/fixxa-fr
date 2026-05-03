@@ -200,6 +200,7 @@ const CaseDetail = () => {
   const status = caseData?.status || caseData?.state || "pending";
   const caseNumber = caseData?.id ? `FTS-${caseData.id}` : "FTS-000000";
   const location = caseData?.location || caseData?.city || "No especificado";
+  const serviceType = caseData?.service_type === 'remote' ? 'Remota' : 'Presencial';
   const title = caseData?.title || caseData?.name || "Caso sin título";
   const description = caseData?.description || "Sin descripción disponible.";
 
@@ -218,7 +219,9 @@ const CaseDetail = () => {
               ← Volver
             </button>
             <h1 className="text-3xl font-bold mt-4">Detalle del Caso</h1>
-            <p className="text-sm text-gray-300 mt-2">Número: {caseNumber} • {caseData?.client?.user?.city || location}</p>
+            <p className="text-sm text-gray-300 mt-2">
+              Número: {caseNumber} • {caseData?.client?.user?.city || location} • <span className={caseData?.service_type === 'remote' ? 'text-blue-400' : 'text-orange-400'}>{serviceType}</span>
+            </p>
           </div>
 
           <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-5 py-4 text-right">

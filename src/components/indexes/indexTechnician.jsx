@@ -108,6 +108,12 @@ const IndexTechnical = () => {
                       <span>{caseItem.client?.user?.city || caseItem.location || 'No especificada'}</span>
                     </div>
 
+                    <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-xl border ${caseItem.service_type === 'remote' ? 'bg-blue-500/10 text-blue-300 border-blue-500/20' : 'bg-orange-500/10 text-orange-300 border-orange-500/20'}`}>
+                      <span className="font-semibold">
+                        {caseItem.service_type === 'remote' ? 'REMOTA' : 'PRESENCIAL'}
+                      </span>
+                    </div>
+
                     {caseItem.responses?.length > 0 && (
                       <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
                         <Users size={14} />

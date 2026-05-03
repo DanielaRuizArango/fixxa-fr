@@ -100,6 +100,9 @@ const IndexCustomer = () => {
                       <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(serviceCase.status)}`}>
                         {serviceCase.status.toUpperCase()}
                       </span>
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full border ${serviceCase.service_type === 'remote' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' : 'bg-orange-500/20 text-orange-300 border-orange-500/50'}`}>
+                        {serviceCase.service_type === 'remote' ? 'REMOTA' : 'PRESENCIAL'}
+                      </span>
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Clock size={14} />
                         {new Date(serviceCase.created_at).toLocaleDateString()}

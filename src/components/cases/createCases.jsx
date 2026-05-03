@@ -13,6 +13,7 @@ const CreateCase = () => {
   const [caseData, setCaseData] = useState({
     title: "",
     description: "",
+    service_type: "presential",
     city: "",
     images: [],
   });
@@ -26,6 +27,7 @@ const CreateCase = () => {
           setCaseData({
             title: data.title || "",
             description: data.description || "",
+            service_type: data.service_type || "presential",
             city: data.city || "",
             images: [], // Las imágenes existentes no se manejan por input file
           });
@@ -81,6 +83,7 @@ const CreateCase = () => {
     const formData = new FormData();
     formData.append("title", caseData.title);
     formData.append("description", caseData.description);
+    formData.append("service_type", caseData.service_type);
     if (caseData.city) {
       formData.append("city", caseData.city);
     }
@@ -159,6 +162,21 @@ const CreateCase = () => {
               disabled={loading}
               className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none resize-none"
             />
+          </div>
+
+          {/* Tipo de Asistencia */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-[#c8d2d4]">Tipo de Asistencia</label>
+            <select
+              name="service_type"
+              value={caseData.service_type}
+              onChange={handleChange}
+              disabled={loading}
+              className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none appearance-none cursor-pointer"
+            >
+              <option value="presential">Presencial (En el sitio)</option>
+              <option value="remote">Remota (Virtual)</option>
+            </select>
           </div>
 
           {/* Ubicación */}
