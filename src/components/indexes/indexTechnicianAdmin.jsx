@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Trash2, 
@@ -21,23 +21,33 @@ const IndexTechnicianAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+
+  const loadTechnicians = useCallback(async () => {
+    try {
+      setLoading(true);
+      let queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (statusFilter) queryParams.append('status', statusFilter);
+      if (cityFilter) queryParams.append('city', cityFilter);
+
+      const response = await fetchData(`/admin/technicians?${queryParams.toString()}`);
+      setTechnicians(response.data?.data || response.data || []);
+    } catch (err) {
+      setError("Error al cargar la lista de técnicos.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, statusFilter, cityFilter]);
 
   useEffect(() => {
-    const loadTechnicians = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchData('/admin/technicians');
-        setTechnicians(response.data?.data || response.data || []);
-      } catch (err) {
-        setError("Error al cargar la lista de técnicos.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTechnicians();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      loadTechnicians();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [loadTechnicians]);
 
   const handleBlockToggle = async (id) => {
     try {
@@ -54,13 +64,6 @@ const IndexTechnicianAdmin = () => {
     }
   };
 
-  const filteredTechnicians = technicians.filter(tech => {
-    const name = (tech.name || tech.user?.name || "").toLowerCase();
-    const email = (tech.email || tech.user?.email || "").toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    return name.includes(searchLower) || email.includes(searchLower);
-  });
-
   return (
     <MainLayout roleName="Administrator" profileRoute="/adminProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
@@ -69,15 +72,37 @@ const IndexTechnicianAdmin = () => {
           <p className="text-gray-400 text-sm">Administra los usuarios registrados como técnicos</p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre, correo o especialidad..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#262f31]/50 border border-white/5 rounded-2xl focus:border-[#8C7E97] focus:outline-none transition-all placeholder:text-gray-600"
-          />
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar por nombre, correo o especialidad..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-[#262f31]/50 border border-white/5 rounded-2xl focus:border-[#8C7E97] focus:outline-none transition-all placeholder:text-gray-600"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+            >
+              <option value="">Todos los estados</option>
+              <option value="active">Activos</option>
+              <option value="blocked">Bloqueados</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Ciudad..."
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] w-32"
+            />
+          </div>
         </div>
 
         {loading ? (
@@ -92,7 +117,7 @@ const IndexTechnicianAdmin = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTechnicians.map((tech) => (
+            {technicians.map((tech) => (
               <div key={tech.id} className="bg-[#262f31]/80 border border-white/5 rounded-2xl p-5 flex flex-col justify-between transition-all hover:bg-[#262f31] shadow-md">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1C2526] flex items-center justify-center border border-[#8C7E97]/30 flex-shrink-0">

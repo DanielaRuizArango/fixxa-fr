@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search,
@@ -21,29 +21,35 @@ const IndexCasesAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+
+  const loadCases = useCallback(async () => {
+    try {
+      setLoading(true);
+      let queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (statusFilter) queryParams.append('status', statusFilter);
+      if (cityFilter) queryParams.append('city', cityFilter);
+      if (typeFilter) queryParams.append('service_type', typeFilter);
+
+      const response = await fetchData(`/admin/cases?${queryParams.toString()}`);
+      setCases(response.data?.data || response.data || []);
+    } catch (err) {
+      setError("Error al cargar la lista de casos de servicio.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, statusFilter, cityFilter, typeFilter]);
 
   useEffect(() => {
-    const loadCases = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchData('/admin/cases');
-        setCases(response.data?.data || response.data || []);
-      } catch (err) {
-        setError("Error al cargar la lista de casos de servicio.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCases();
-  }, []);
-
-  const filteredCases = cases.filter(caseItem => 
-    caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    caseItem.client?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    caseItem.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const timeoutId = setTimeout(() => {
+      loadCases();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [loadCases]);
 
   const getStatusBadge = (status) => {
     const statusStyles = {
@@ -86,15 +92,52 @@ const IndexCasesAdmin = () => {
         <SystemAlerts />
 
         {/* Barra de búsqueda */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar por título, cliente o estado..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#262f31]/50 border border-white/5 rounded-2xl focus:border-[#8C7E97] focus:outline-none transition-all placeholder:text-gray-600"
-          />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar por título o descripción..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-[#262f31]/50 border border-white/5 rounded-2xl focus:border-[#8C7E97] focus:outline-none transition-all placeholder:text-gray-600"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="pending">Pendientes</option>
+                <option value="responded">Respondidos</option>
+                <option value="resolved">Resueltos</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
+
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="">Cualquier asistencia</option>
+                <option value="presential">Presencial</option>
+                <option value="remote">Remota</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder="Ciudad..."
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] w-32"
+              />
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -107,7 +150,7 @@ const IndexCasesAdmin = () => {
              <AlertCircle className="mx-auto mb-2 text-red-500" />
              <p className="text-red-200">{error}</p>
           </div>
-        ) : filteredCases.length === 0 ? (
+        ) : cases.length === 0 ? (
           <div className="bg-[#2B2F36] border border-white/5 rounded-3xl p-10 text-center flex flex-col items-center">
             <div className="bg-[#1C2526] p-5 rounded-full mb-4">
               <FileText size={40} className="text-[#8C7E97]" />
@@ -119,7 +162,7 @@ const IndexCasesAdmin = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCases.map((caseItem) => (
+            {cases.map((caseItem) => (
               <div 
                 key={caseItem.id}
                 onClick={() => navigate(`/case-detail/${caseItem.id}`)}

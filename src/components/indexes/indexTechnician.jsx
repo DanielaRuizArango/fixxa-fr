@@ -16,6 +16,7 @@ const IndexTechnical = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [city, setCity] = useState("");
   const [radius, setRadius] = useState("");
+  const [serviceType, setServiceType] = useState("");
   const [userCoords, setUserCoords] = useState(null);
 
   const loadData = useCallback(async () => {
@@ -31,6 +32,7 @@ const IndexTechnical = () => {
         queryParams.append('lat', userCoords.lat);
         queryParams.append('lng', userCoords.lng);
       }
+      if (serviceType) queryParams.append('service_type', serviceType);
 
       const casesResponse = await fetchData(`/technician/cases?${queryParams.toString()}`);
       setCases(casesResponse.data?.data || casesResponse.data || []);
@@ -84,6 +86,7 @@ const IndexTechnical = () => {
     setSearch("");
     setCity("");
     setRadius("");
+    setServiceType("");
     setShowFilters(false);
   };
 
@@ -152,6 +155,19 @@ const IndexTechnical = () => {
                   {radius && !userCoords && (
                     <p className="text-[10px] text-yellow-500/70">Debes permitir el acceso a tu ubicación para usar este filtro.</p>
                   )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-gray-400 font-medium">Tipo de Asistencia</label>
+                  <select
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
+                  >
+                    <option value="">Cualquier tipo</option>
+                    <option value="presential">Presencial</option>
+                    <option value="remote">Remota</option>
+                  </select>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon, Search, SlidersHorizontal } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 
@@ -11,23 +11,37 @@ const IndexCustomer = () => {
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState("Customer");
 
-  useEffect(() => {
-    const loadCases = async () => {
-      try {
-        const userResponse = await fetchData('/client/me');
-        setUserName(userResponse.data?.name || "Customer");
-        const response = await fetchData('/client/cases');
-        setCases(response.data?.data || response.data || []);
-      } catch (err) {
-        setError("Error al cargar tus casos.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
 
-    loadCases();
-  }, []);
+  const loadCases = useCallback(async () => {
+    try {
+      setLoading(true);
+      const userResponse = await fetchData('/client/me');
+      setUserName(userResponse.data?.name || "Customer");
+      
+      let queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (statusFilter) queryParams.append('status', statusFilter);
+      if (typeFilter) queryParams.append('service_type', typeFilter);
+
+      const response = await fetchData(`/client/cases?${queryParams.toString()}`);
+      setCases(response.data?.data || response.data || []);
+    } catch (err) {
+      setError("Error al cargar tus casos.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadCases();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [loadCases]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -41,8 +55,48 @@ const IndexCustomer = () => {
     <MainLayout roleName={localStorage.getItem('userName') || userName} profileRoute="/customerProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
         
-        <div className="flex justify-between items-center mb-2">
-          <h1 className="text-2xl font-bold font-['Kadwa']">Mis Casos de Servicio</h1>
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold font-['Kadwa']">Mis Casos de Servicio</h1>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por título o descripción..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#262f31] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#8C7E97] transition-all"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-[#262f31] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="pending">Pendientes</option>
+                <option value="responded">Respondidos</option>
+                <option value="resolved">Resueltos</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
+
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-[#262f31] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="">Cualquier asistencia</option>
+                <option value="presential">Presencial</option>
+                <option value="remote">Remota</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {loading ? (

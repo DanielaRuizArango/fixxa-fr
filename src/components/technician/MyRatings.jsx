@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Star, User, Calendar } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Star, User, Calendar, Search } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData } from "../../api.js";
 
@@ -10,22 +10,32 @@ const MyRatings = () => {
 
   const userName = localStorage.getItem("userName") || "Técnico";
 
-  useEffect(() => {
-    const loadRatings = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchData("/technician/my-rating");
-        setData(response.data);
-      } catch (err) {
-        console.error("Error al cargar calificaciones:", err);
-        setError("No se pudieron cargar tus calificaciones.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [scoreFilter, setScoreFilter] = useState("");
 
-    loadRatings();
-  }, []);
+  const loadRatings = useCallback(async () => {
+    try {
+      setLoading(true);
+      let queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (scoreFilter) queryParams.append('score', scoreFilter);
+
+      const response = await fetchData(`/technician/my-rating?${queryParams.toString()}`);
+      setData(response.data);
+    } catch (err) {
+      console.error("Error al cargar calificaciones:", err);
+      setError("No se pudieron cargar tus calificaciones.");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, scoreFilter]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadRatings();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [loadRatings]);
 
   const renderStars = (score) => {
     return (
@@ -44,7 +54,35 @@ const MyRatings = () => {
   return (
     <MainLayout roleName={userName} profileRoute="/technicianProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
-        <h1 className="text-3xl font-bold">Mis Calificaciones</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <h1 className="text-3xl font-bold">Mis Calificaciones</h1>
+          
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por cliente o caso..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#262f31] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#8C7E97]"
+              />
+            </div>
+            
+            <select
+              value={scoreFilter}
+              onChange={(e) => setScoreFilter(e.target.value)}
+              className="bg-[#262f31] border border-white/10 rounded-xl py-2 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+            >
+              <option value="">Todas las estrellas</option>
+              <option value="5">5 estrellas</option>
+              <option value="4">4 estrellas</option>
+              <option value="3">3 estrellas</option>
+              <option value="2">2 estrellas</option>
+              <option value="1">1 estrella</option>
+            </select>
+          </div>
+        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-24 text-center">
@@ -83,12 +121,12 @@ const MyRatings = () => {
             <div className="space-y-4 mt-4">
               <h2 className="text-xl font-semibold px-2">Calificaciones recientes</h2>
               
-              {!data?.ratings || data.ratings.length === 0 ? (
+              {!data?.ratings?.data || data.ratings.data.length === 0 ? (
                 <div className="rounded-3xl bg-[#262f31] p-12 border border-white/5 text-center">
-                  <p className="text-gray-400">Aún no tienes calificaciones.</p>
+                  <p className="text-gray-400">No se encontraron calificaciones con estos filtros.</p>
                 </div>
               ) : (
-                data.ratings.map((rating) => (
+                data.ratings.data.map((rating) => (
                   <div key={rating.id} className="rounded-3xl bg-[#262f31] p-6 border border-white/5 shadow-lg shadow-black/10">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
