@@ -17,6 +17,8 @@ const IndexTechnical = () => {
   const [city, setCity] = useState("");
   const [radius, setRadius] = useState("");
   const [serviceType, setServiceType] = useState("");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [userCoords, setUserCoords] = useState(null);
 
   const loadData = useCallback(async () => {
@@ -33,6 +35,10 @@ const IndexTechnical = () => {
         queryParams.append('lng', userCoords.lng);
       }
       if (serviceType) queryParams.append('service_type', serviceType);
+      
+      // Agregar ordenamiento
+      queryParams.append('sort_by', sortBy);
+      queryParams.append('sort_order', sortOrder);
 
       const casesResponse = await fetchData(`/technician/cases?${queryParams.toString()}`);
       setCases(casesResponse.data?.data || casesResponse.data || []);
@@ -42,7 +48,7 @@ const IndexTechnical = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, city, radius, userCoords]);
+  }, [search, city, radius, userCoords, serviceType, sortBy, sortOrder]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -87,6 +93,8 @@ const IndexTechnical = () => {
     setCity("");
     setRadius("");
     setServiceType("");
+    setSortBy("created_at");
+    setSortOrder("desc");
     setShowFilters(false);
   };
 
@@ -113,7 +121,7 @@ const IndexTechnical = () => {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-3 rounded-xl border transition-all ${showFilters || city || radius ? 'bg-[#8C7E97] border-[#8C7E97] text-white' : 'bg-[#262f31] border-white/10 text-gray-400'}`}
+              className={`p-3 rounded-xl border transition-all ${showFilters || city || radius || serviceType || sortBy !== 'created_at' ? 'bg-[#8C7E97] border-[#8C7E97] text-white' : 'bg-[#262f31] border-white/10 text-gray-400'}`}
             >
               <SlidersHorizontal size={20} />
             </button>
@@ -123,11 +131,11 @@ const IndexTechnical = () => {
           {showFilters && (
             <div className="bg-[#262f31] border border-white/10 rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-gray-200">Filtros Avanzados</h3>
+                <h3 className="font-semibold text-gray-200">Filtros y Orden</h3>
                 <button onClick={clearFilters} className="text-xs text-[#8C7E97] hover:underline">Limpiar filtros</button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs text-gray-400 font-medium">Ciudad</label>
                   <input
@@ -152,9 +160,6 @@ const IndexTechnical = () => {
                     <option value="20">A menos de 20 km</option>
                     <option value="50">A menos de 50 km</option>
                   </select>
-                  {radius && !userCoords && (
-                    <p className="text-[10px] text-yellow-500/70">Debes permitir el acceso a tu ubicación para usar este filtro.</p>
-                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -167,6 +172,32 @@ const IndexTechnical = () => {
                     <option value="">Cualquier tipo</option>
                     <option value="presential">Presencial</option>
                     <option value="remote">Remota</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-gray-400 font-medium">Ordenar por</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
+                  >
+                    <option value="created_at">Fecha de creación</option>
+                    <option value="responses_count">Número de respuestas</option>
+                    <option value="client_name">Nombre del cliente</option>
+                    <option value="city">Ciudad</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-gray-400 font-medium">Orden</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
+                  >
+                    <option value="desc">Descendente (Más reciente/mayor)</option>
+                    <option value="asc">Ascendente (Más antiguo/menor)</option>
                   </select>
                 </div>
               </div>

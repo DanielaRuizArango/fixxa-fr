@@ -24,6 +24,8 @@ const IndexCasesAdmin = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const loadCases = useCallback(async () => {
     try {
@@ -33,6 +35,10 @@ const IndexCasesAdmin = () => {
       if (statusFilter) queryParams.append('status', statusFilter);
       if (cityFilter) queryParams.append('city', cityFilter);
       if (typeFilter) queryParams.append('service_type', typeFilter);
+      
+      // Agregar ordenamiento
+      queryParams.append('sort_by', sortBy);
+      queryParams.append('sort_order', sortOrder);
 
       const response = await fetchData(`/admin/cases?${queryParams.toString()}`);
       setCases(response.data?.data || response.data || []);
@@ -42,7 +48,7 @@ const IndexCasesAdmin = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, statusFilter, cityFilter, typeFilter]);
+  }, [searchTerm, statusFilter, cityFilter, typeFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -111,7 +117,7 @@ const IndexCasesAdmin = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
               >
-                <option value="">Todos los estados</option>
+                <option value="">Estado</option>
                 <option value="active">Activos</option>
                 <option value="pending">Pendientes</option>
                 <option value="responded">Respondidos</option>
@@ -124,7 +130,7 @@ const IndexCasesAdmin = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
               >
-                <option value="">Cualquier asistencia</option>
+                <option value="">Asistencia</option>
                 <option value="presential">Presencial</option>
                 <option value="remote">Remota</option>
               </select>
@@ -134,8 +140,28 @@ const IndexCasesAdmin = () => {
                 placeholder="Ciudad..."
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] w-32"
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] w-28"
               />
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="created_at">Fecha</option>
+                <option value="responses_count">Respuestas</option>
+                <option value="client_name">Cliente</option>
+                <option value="technician_name">Técnico</option>
+              </select>
+
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="desc">Desc</option>
+                <option value="asc">Asc</option>
+              </select>
             </div>
           </div>
         </div>

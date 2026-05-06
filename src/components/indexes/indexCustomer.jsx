@@ -14,6 +14,8 @@ const IndexCustomer = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const loadCases = useCallback(async () => {
     try {
@@ -25,6 +27,10 @@ const IndexCustomer = () => {
       if (searchTerm) queryParams.append('search', searchTerm);
       if (statusFilter) queryParams.append('status', statusFilter);
       if (typeFilter) queryParams.append('service_type', typeFilter);
+      
+      // Agregar ordenamiento
+      queryParams.append('sort_by', sortBy);
+      queryParams.append('sort_order', sortOrder);
 
       const response = await fetchData(`/client/cases?${queryParams.toString()}`);
       setCases(response.data?.data || response.data || []);
@@ -34,7 +40,7 @@ const IndexCustomer = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, statusFilter, typeFilter]);
+  }, [searchTerm, statusFilter, typeFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -72,7 +78,7 @@ const IndexCustomer = () => {
               />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -95,9 +101,29 @@ const IndexCustomer = () => {
                 <option value="presential">Presencial</option>
                 <option value="remote">Remota</option>
               </select>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-[#262f31] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="created_at">Fecha creación</option>
+                <option value="responses_count">Más respuestas</option>
+                <option value="technician_name">Nombre técnico</option>
+                <option value="status">Estado</option>
+              </select>
+
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="bg-[#262f31] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer"
+              >
+                <option value="desc">Desc</option>
+                <option value="asc">Asc</option>
+              </select>
             </div>
           </div>
-        </div>
+        </div>v>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-20">
