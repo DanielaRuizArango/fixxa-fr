@@ -8,6 +8,7 @@ import TechnicianForm from "./components/forms/technicianForm"
 import IndexCustomer from "./components/indexes/indexCustomer"
 import IndexTechnician from "./components/indexes/indexTechnician"
 import IndexAdmin from "./components/indexes/indexAdmin"
+import AdminDashboard from "./components/indexes/AdminDashboard"
 import IndexClientAdmin from "./components/indexes/indexClientAdmin"
 import IndexTechnicianAdmin from "./components/indexes/indexTechnicianAdmin"
 import IndexCasesAdmin from "./components/indexes/indexCasesAdmin"
@@ -131,6 +132,14 @@ function App() {
       {/* Rutas protegidas - Administradores */}
       <Route
         path="/indexAdmin"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manageAdmins"
         element={
           <ProtectedRoute allowedRoles={["super_admin"]}>
             <IndexAdmin />

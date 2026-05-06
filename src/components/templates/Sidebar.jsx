@@ -117,10 +117,17 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
           <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-white/10">
             <p className="text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 mb-2">Administración</p>
             
+            <button
+              onClick={() => { navigate("/indexAdmin"); onClose?.(); }}
+              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+            >
+              Dashboard
+            </button>
+
             {/* Solo el Super Admin ve la gestión de administradores */}
             {localStorage.getItem('role') === 'super_admin' && (
               <button
-                onClick={() => { navigate("/indexAdmin"); onClose?.(); }}
+                onClick={() => { navigate("/manageAdmins"); onClose?.(); }}
                 className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
               >
                 Administradores
