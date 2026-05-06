@@ -10,7 +10,8 @@ import {
   Users,
   MapPin,
   Lock,
-  Unlock
+  Unlock,
+  Eye
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
@@ -171,6 +172,13 @@ const IndexClientAdmin = () => {
                   </div>
 
                   <div className="flex gap-2 justify-end pt-4 border-t border-white/5">
+                    <button 
+                      onClick={() => navigate(`/admin/client-detail/${client.id}`)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white/5 text-[#8C7E97] hover:bg-[#8C7E97]/10 border border-[#8C7E97]/20"
+                    >
+                      <Eye size={14} />
+                      <span>Ver Expediente</span>
+                    </button>
                     {localStorage.getItem('role') !== 'moderator' && (
                       <button 
                         onClick={() => handleBlockToggle(client.id)}

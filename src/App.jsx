@@ -26,6 +26,8 @@ import CaseDetail from "./components/cases/showCases.jsx"
 import ChatList from "./components/chat/ChatList.jsx"
 import ChatRoom from "./components/chat/ChatRoom.jsx"
 import MyRatings from "./components/technician/MyRatings.jsx"
+import ClientDetailAdmin from "./components/admin/ClientDetail.jsx"
+import TechnicianDetailAdmin from "./components/admin/TechnicianDetail.jsx"
 
 function App() {
   // Redirección automática al login cuando el token expira (401)
@@ -191,6 +193,22 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
             <IndexCasesAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/client-detail/:id"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
+            <ClientDetailAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/technician-detail/:id"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
+            <TechnicianDetailAdmin />
           </ProtectedRoute>
         }
       />
