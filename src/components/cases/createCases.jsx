@@ -16,7 +16,31 @@ const CreateCase = () => {
     service_type: "presential",
     city: "",
     images: [],
+    latitude: null,
+    longitude: null,
   });
+
+  const [locationStatus, setLocationStatus] = useState("");
+
+  useEffect(() => {
+    if (!isEditMode && "geolocation" in navigator) {
+      setLocationStatus("Capturando ubicación...");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCaseData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }));
+          setLocationStatus("Ubicación capturada con éxito");
+        },
+        (error) => {
+          console.error("Error capturando ubicación:", error);
+          setLocationStatus("No se pudo capturar la ubicación");
+        }
+      );
+    }
+  }, [isEditMode]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -29,6 +53,8 @@ const CreateCase = () => {
             description: data.description || "",
             service_type: data.service_type || "presential",
             city: data.city || "",
+            latitude: data.latitude || null,
+            longitude: data.longitude || null,
             images: [], // Las imágenes existentes no se manejan por input file
           });
           
@@ -84,8 +110,17 @@ const CreateCase = () => {
     formData.append("title", caseData.title);
     formData.append("description", caseData.description);
     formData.append("service_type", caseData.service_type);
+    
     if (caseData.city) {
       formData.append("city", caseData.city);
+    }
+
+    if (caseData.latitude) {
+      formData.append("latitude", caseData.latitude);
+    }
+
+    if (caseData.longitude) {
+      formData.append("longitude", caseData.longitude);
     }
     
     // Laravel espera un array de archivos: images[]
@@ -191,6 +226,11 @@ const CreateCase = () => {
               disabled={loading}
               className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none"
             />
+            {locationStatus && (
+              <p className={`text-[10px] mt-1 ${locationStatus.includes('éxito') ? 'text-green-400' : 'text-yellow-400'}`}>
+                {locationStatus}
+              </p>
+            )}
           </div>
 
           {/* Imágenes */}

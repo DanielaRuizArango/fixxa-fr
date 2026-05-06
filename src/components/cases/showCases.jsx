@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl } from "../../api.js";
 
@@ -248,7 +248,20 @@ const CaseDetail = () => {
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 className="text-2xl font-semibold text-white">{title}</h2>
-                    <p className="mt-2 text-sm text-gray-300">Ubicación: {location}</p>
+                    <div className="flex flex-col gap-1 mt-2">
+                      <p className="text-sm text-gray-300">Ubicación: {location}</p>
+                      {caseData?.latitude && caseData?.longitude && (
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${caseData.latitude},${caseData.longitude}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#8C7E97] hover:underline flex items-center gap-1 mt-1"
+                        >
+                          <MapPin size={12} />
+                          Ver ubicación exacta en Google Maps
+                        </a>
+                      )}
+                    </div>
                   </div>
                   <span className="inline-flex rounded-full bg-[#8C7E97]/15 px-4 py-2 text-sm font-semibold text-[#d7c4ff] border border-[#8C7E97]/30">
                     {caseNumber}
