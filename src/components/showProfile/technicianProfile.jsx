@@ -84,7 +84,12 @@ const TechnicianProfile = () => {
               )}
             </div>
             <h1 className="text-3xl font-bold text-center">{data.name}</h1>
-            <p className="text-[#8C7E97] font-medium">Técnico Fixxa</p>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-[#8C7E97] font-medium">Técnico Fixxa</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${data.technician?.is_available ? 'bg-green-500/20 text-green-400 border border-green-500/20' : 'bg-gray-500/20 text-gray-400 border border-gray-500/20'}`}>
+                {data.technician?.is_available ? '• Disponible' : '• No disponible'}
+              </span>
+            </div>
           </div>
 
           {/* Info */}

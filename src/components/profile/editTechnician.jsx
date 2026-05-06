@@ -20,6 +20,8 @@ const EditTechnician = () => {
     id_number: '',
     title: '',
     experience: '',
+    working_hours: '',
+    is_available: true,
   });
 
   const [preview, setPreview] = useState('');
@@ -39,6 +41,8 @@ const EditTechnician = () => {
           id_number: data.id_number || '', 
           title: data.technician?.title || '',
           experience: data.technician?.experience || '',
+          working_hours: data.technician?.working_hours || '',
+          is_available: data.technician?.is_available ?? true,
           image: null, // Don't track image content in state, just the file
         });
         
@@ -70,8 +74,11 @@ const EditTechnician = () => {
   };
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setUser((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setUser((prev) => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
   };
 
   const handleSubmit = async (event) => {
@@ -87,6 +94,8 @@ const EditTechnician = () => {
     formData.append('address', user.address);
     formData.append('title', user.title);
     formData.append('experience', user.experience);
+    formData.append('working_hours', user.working_hours);
+    formData.append('is_available', user.is_available ? '1' : '0');
     
     if (user.image) {
       formData.append('image', user.image);
@@ -184,6 +193,23 @@ const EditTechnician = () => {
               />
             </div>
 
+            <div className="flex items-center justify-between p-4 bg-[#1f2a2b] rounded-xl border border-[#3f4b4d]">
+              <div>
+                <p className="text-sm font-medium text-white">Estado de Disponibilidad</p>
+                <p className="text-[10px] text-gray-400">Activa para recibir notificaciones de nuevos casos</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="is_available"
+                  checked={user.is_available} 
+                  onChange={handleChange}
+                  className="sr-only peer" 
+                />
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8c7e97]"></div>
+              </label>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-[#c8d2d4]">Teléfono</label>
@@ -237,6 +263,18 @@ const EditTechnician = () => {
                 value={user.password}
                 onChange={handleChange}
                 placeholder="Dejar en blanco para mantener actual"
+                className="w-full p-3 rounded-xl bg-[#1f2a2b] text-white border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-[#c8d2d4]">Horario de Atención</label>
+              <input
+                type="text"
+                name="working_hours"
+                value={user.working_hours}
+                onChange={handleChange}
+                placeholder="Ej: Lunes a Viernes 8am - 6pm"
                 className="w-full p-3 rounded-xl bg-[#1f2a2b] text-white border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none"
               />
             </div>
