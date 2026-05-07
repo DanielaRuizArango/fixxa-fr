@@ -20,10 +20,14 @@ const IndexTechnical = () => {
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("desc");
   const [userCoords, setUserCoords] = useState(null);
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (page = 1, append = false) => {
     try {
-      setLoading(true);
+      if (!append) setLoading(true);
       
       // Construir query string
       let queryParams = new URLSearchParams();
@@ -39,9 +43,21 @@ const IndexTechnical = () => {
       // Agregar ordenamiento
       queryParams.append('sort_by', sortBy);
       queryParams.append('sort_order', sortOrder);
+      
+      // Agregar página
+      queryParams.append('page', page);
 
       const casesResponse = await fetchData(`/technician/cases?${queryParams.toString()}`);
-      setCases(casesResponse.data?.data || casesResponse.data || []);
+      const newData = casesResponse.data?.data || casesResponse.data || [];
+      
+      if (append) {
+        setCases(prev => [...prev, ...newData]);
+      } else {
+        setCases(newData);
+      }
+      
+      setHasMore(!!casesResponse.data?.next_page_url);
+      setCurrentPage(page);
     } catch (err) {
       console.error("Error al cargar solicitudes:", err);
       setError("Error al cargar las solicitudes.");
@@ -288,6 +304,16 @@ const IndexTechnical = () => {
                 </div>
               </div>
             ))}
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <button 
+                  onClick={() => loadData(currentPage + 1, true)}
+                  className="px-8 py-3 bg-[#8C7E97] hover:bg-[#8C7E97]/80 text-white rounded-2xl font-bold transition-all shadow-lg shadow-[#8C7E97]/20 active:scale-95"
+                >
+                  {loading ? 'Cargando...' : 'Cargar más solicitudes'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

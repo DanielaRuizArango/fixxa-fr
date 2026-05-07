@@ -17,9 +17,13 @@ const IndexCustomer = () => {
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  const loadCases = useCallback(async () => {
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+
+  const loadCases = useCallback(async (page = 1, append = false) => {
     try {
-      setLoading(true);
+      if (!append) setLoading(true);
       const userResponse = await fetchData('/client/me');
       setUserName(userResponse.data?.name || "Customer");
       
@@ -31,9 +35,21 @@ const IndexCustomer = () => {
       // Agregar ordenamiento
       queryParams.append('sort_by', sortBy);
       queryParams.append('sort_order', sortOrder);
+      
+      // Agregar página
+      queryParams.append('page', page);
 
       const response = await fetchData(`/client/cases?${queryParams.toString()}`);
-      setCases(response.data?.data || response.data || []);
+      const newData = response.data?.data || response.data || [];
+      
+      if (append) {
+        setCases(prev => [...prev, ...newData]);
+      } else {
+        setCases(newData);
+      }
+      
+      setHasMore(!!response.data?.next_page_url);
+      setCurrentPage(page);
     } catch (err) {
       setError("Error al cargar tus casos.");
       console.error(err);
@@ -245,6 +261,16 @@ const IndexCustomer = () => {
                 </div>
               </div>
             ))}
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <button 
+                  onClick={() => loadCases(currentPage + 1, true)}
+                  className="px-8 py-3 bg-[#8C7E97] hover:bg-[#8C7E97]/80 text-white rounded-2xl font-bold transition-all shadow-lg shadow-[#8C7E97]/20 active:scale-95"
+                >
+                  {loading ? 'Cargando...' : 'Cargar más casos'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
