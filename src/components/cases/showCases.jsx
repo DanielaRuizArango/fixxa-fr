@@ -439,11 +439,19 @@ const CaseDetail = () => {
                             <div className="p-5">
                               <div className="flex items-start justify-between gap-4 mb-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] shrink-0">
+                                  <div 
+                                    onClick={() => navigate(`/technician-profile/${techId}`)}
+                                    className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] shrink-0 cursor-pointer hover:bg-[#8C7E97]/30 transition-colors"
+                                  >
                                     <User size={20} />
                                   </div>
                                   <div>
-                                    <p className="font-bold text-white text-base leading-tight">{techName}</p>
+                                    <p 
+                                      onClick={() => navigate(`/technician-profile/${techId}`)}
+                                      className="font-bold text-white text-base leading-tight cursor-pointer hover:text-[#8C7E97] transition-colors"
+                                    >
+                                      {techName}
+                                    </p>
                                     <p className="text-[10px] text-gray-500 mt-0.5">{techEmail}</p>
                                     {isAccepted && (
                                       <span className="mt-1.5 bg-emerald-500/20 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 w-fit uppercase tracking-tighter">
