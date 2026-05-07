@@ -126,7 +126,7 @@ function App() {
       <Route
         path="/case-detail/:id"
         element={
-          <ProtectedRoute allowedRoles={["client", "technician", "admin"]}>
+          <ProtectedRoute allowedRoles={["client", "technician", "super_admin", "admin", "moderator"]}>
             <CaseDetail />
           </ProtectedRoute>
         }
@@ -135,7 +135,7 @@ function App() {
       <Route
         path="/technician-profile/:id"
         element={
-          <ProtectedRoute allowedRoles={["client", "technician", "admin"]}>
+          <ProtectedRoute allowedRoles={["client", "technician", "super_admin", "admin", "moderator"]}>
             <TechnicianPublicProfile />
           </ProtectedRoute>
         }

@@ -22,10 +22,15 @@ const CaseDetail = () => {
   const [ratingLoading, setRatingLoading] = useState(false);
 
   const role = localStorage.getItem("role");
+  const isAdmin = ["super_admin", "admin", "moderator"].includes(role);
   const userName = localStorage.getItem("userName") || "Usuario";
-  const apiEndpoint = role === "technician"
-    ? `/technician/cases/${id}`
-    : `/client/cases/${id}`;
+  
+  let apiEndpoint = `/client/cases/${id}`;
+  if (role === "technician") {
+    apiEndpoint = `/technician/cases/${id}`;
+  } else if (isAdmin) {
+    apiEndpoint = `/admin/cases/${id}`;
+  }
 
   const loadCase = async () => {
     try {
@@ -207,13 +212,17 @@ const CaseDetail = () => {
   return (
     <MainLayout
       roleName={userName}
-      profileRoute={role === "technician" ? "/technicianProfile" : "/customerProfile"}
+      profileRoute={role === "technician" ? "/technicianProfile" : isAdmin ? "/adminProfile" : "/customerProfile"}
     >
       <div className="flex flex-col gap-6 pt-4 pb-20">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <button
-              onClick={() => navigate(role === "technician" ? "/indexTechnician" : "/indexCustomer")}
+              onClick={() => {
+                if (role === "technician") navigate("/indexTechnician");
+                else if (isAdmin) navigate("/indexCasesAdmin");
+                else navigate("/indexCustomer");
+              }}
               className="text-sm text-[#8C7E97] hover:underline"
             >
               ← Volver
@@ -222,6 +231,15 @@ const CaseDetail = () => {
             <p className="text-sm text-gray-300 mt-2">
               Número: {caseNumber} • {caseData?.client?.user?.city || location} • <span className={caseData?.service_type === 'remote' ? 'text-blue-400' : 'text-orange-400'}>{serviceType}</span>
             </p>
+            {isAdmin && caseData?.client && (
+              <button 
+                onClick={() => navigate(`/admin/client-detail/${caseData.client.id}`)}
+                className="mt-2 text-xs font-bold text-[#8C7E97] hover:text-[#a493bd] flex items-center gap-1 transition-colors"
+              >
+                <User size={14} />
+                Ver expediente del cliente: {caseData.client.user?.name}
+              </button>
+            )}
           </div>
 
           <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-5 py-4 text-right">
