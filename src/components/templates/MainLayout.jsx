@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchData } from "../../api";
+import Swal from "sweetalert2";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
@@ -56,14 +57,43 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
     ]),
     {
       label: "Log out",
-      onClick: () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("technicianId");
-        localStorage.removeItem("clientId");
-        localStorage.removeItem("userId");
-        navigate("/login");
+      onClick: async () => {
+        const result = await Swal.fire({
+          title: '¿Cerrar sesión?',
+          text: "Tendrás que ingresar tus credenciales nuevamente.",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#8C7E97',
+          cancelButtonColor: '#4C5462',
+          confirmButtonText: 'Sí, salir',
+          cancelButtonText: 'Cancelar',
+          background: '#1C2526',
+          color: '#ffffff',
+        });
+
+        if (result.isConfirmed) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+          localStorage.removeItem("userName");
+          localStorage.removeItem("technicianId");
+          localStorage.removeItem("clientId");
+          localStorage.removeItem("userId");
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Sesión cerrada',
+            text: '¡Hasta pronto!',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            background: '#1C2526',
+            color: '#ffffff',
+          });
+          
+          navigate("/login");
+        }
       },
     },
     ...navItems,

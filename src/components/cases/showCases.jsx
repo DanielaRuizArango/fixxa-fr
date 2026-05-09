@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl } from "../../api.js";
+import Swal from "sweetalert2";
 
 const CaseDetail = () => {
   const { id } = useParams();
@@ -65,19 +66,45 @@ const CaseDetail = () => {
           questions: questions
         })
       });
+      Swal.fire({
+        icon: "success",
+        title: "Propuesta enviada",
+        text: "Tu propuesta ha sido enviada correctamente.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 3000,
+        timerProgressBar: true,
+      });
       setSuccessMessage("Tu propuesta ha sido enviada correctamente.");
       setEstimatedCost("");
       setQuestions("");
       loadCase();
     } catch (err) {
       console.error("Error enviando respuesta:", err);
-      setError(err.message || "No se pudo enviar la propuesta.");
+      const msg = err.message || "No se pudo enviar la propuesta.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleAcceptProposal = async (responseId, techId, initialMessage = "") => {
+    const result = await Swal.fire({
+      icon: "question",
+      title: "Aceptar propuesta",
+      text: "¿Estás seguro de que deseas aceptar esta propuesta? Se abrirá el chat con el técnico.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, aceptar",
+      cancelButtonText: "Cancelar",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
     setActionLoading(true);
     setError(null);
     try {
@@ -89,20 +116,67 @@ const CaseDetail = () => {
       });
       setSuccessMessage("Propuesta aceptada correctamente.");
       setCaseData(response.data);
-      
-      // Redirigir al chat con el técnico después de aceptar
-      setTimeout(() => {
-        navigate(`/chat/${response.data.conversation_id || response.data.chat_id}`);
-      }, 500);
+      Swal.fire({
+        icon: "success",
+        title: "¡Propuesta aceptada!",
+        text: "Serás redirigido al chat con el técnico.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      // Buscar el ID del chat en múltiples lugares posibles de la respuesta
+      const chatId = response.data?.conversation_id || 
+                     response.data?.chat_id || 
+                     response.data?.conversation?.id || 
+                     response.data?.id || 
+                     response.conversation_id || 
+                     response.chat_id ||
+                     response.id;
+
+      if (chatId) {
+        // Redirigir al chat con el técnico después de aceptar
+        setTimeout(() => {
+          navigate(`/chat/${chatId}`);
+        }, 2100);
+      } else {
+        console.error("No se encontró el ID de la conversación en la respuesta:", response);
+        Swal.fire({
+          icon: 'warning',
+          title: 'Propuesta aceptada',
+          text: 'La propuesta fue aceptada, pero no pudimos redirigirte al chat automáticamente. Por favor, ve a la sección de mensajes.',
+          background: "#1C2526",
+          color: "#ffffff",
+          confirmButtonColor: "#8C7E97",
+        });
+      }
     } catch (err) {
       console.error("Error al aceptar propuesta:", err);
-      setError(err.message || "No se pudo aceptar la propuesta.");
+      const msg = err.message || "No se pudo aceptar la propuesta.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleRejectProposal = async (responseId) => {
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Rechazar propuesta",
+      text: "¿Estás seguro de que deseas rechazar esta propuesta? Esta acción no se puede deshacer.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, rechazar",
+      cancelButtonText: "Cancelar",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
     setActionLoading(true);
     setError(null);
     try {
@@ -114,15 +188,41 @@ const CaseDetail = () => {
         ...prev,
         responses: prev.responses.filter(r => r.id !== responseId)
       }));
+      Swal.fire({
+        icon: "info",
+        title: "Propuesta rechazada",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Error al rechazar propuesta:", err);
-      setError(err.message || "No se pudo rechazar la propuesta.");
+      const msg = err.message || "No se pudo rechazar la propuesta.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleResolveCase = async () => {
+    const result = await Swal.fire({
+      icon: "question",
+      title: "Terminar caso",
+      text: "¿Confirmas que el trabajo ha sido completado? Podrás calificar al técnico a continuación.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, terminar",
+      cancelButtonText: "Cancelar",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#8C7E97",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
     setActionLoading(true);
     setError(null);
     try {
@@ -133,9 +233,22 @@ const CaseDetail = () => {
       setScore(0);
       setComment("");
       setCaseData(response.data);
+      Swal.fire({
+        icon: "success",
+        title: "\u00a1Caso terminado!",
+        text: "Ahora puedes calificar al técnico.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Error al resolver caso:", err);
-      setError(err.message || "No se pudo resolver el caso.");
+      const msg = err.message || "No se pudo resolver el caso.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
     } finally {
       setActionLoading(false);
     }
@@ -567,11 +680,6 @@ const CaseDetail = () => {
           </div>
         )}
 
-        {successMessage && !['technician', 'client'].includes(localStorage.getItem('role') === 'technician' ? 'client' : '') && (
-           <div className="fixed bottom-10 right-10 bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 animate-bounce">
-              {successMessage}
-           </div>
-        )}
       </div>
     </MainLayout>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchData } from "../api";
+import Swal from "sweetalert2";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,7 +12,14 @@ const Login = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError("Por favor, complete todos los campos.");
+      Swal.fire({
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Por favor, complete todos los campos.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+      });
       return;
     }
 
@@ -67,6 +75,20 @@ const Login = () => {
         localStorage.setItem('clientId', data.data.user.client.id);
       }
 
+      // Alerta de éxito
+      Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: `Hola de nuevo, ${name || 'Usuario'}`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: '#1C2526',
+        color: '#ffffff',
+      });
+
       // Redirigir al usuario según su rol
       if (role === 'client') {
         navigate("/indexCustomer");
@@ -79,7 +101,16 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Error en login:', err);
-      setError(err.message || "Error al iniciar sesión. Verifique sus credenciales.");
+      const msg = err.message || "Error al iniciar sesión. Verifique sus credenciales.";
+      setError(msg);
+      Swal.fire({
+        icon: "error",
+        title: "Error al ingresar",
+        text: msg,
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+      });
     } finally {
       setLoading(false);
     }
@@ -98,6 +129,7 @@ const Login = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           placeholder="ejemplo@correo.com"
           className="bg-[#4C5462] rounded-lg p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />
@@ -108,6 +140,7 @@ const Login = () => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           placeholder="********"
           className="bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-[#8C7E97]"
         />

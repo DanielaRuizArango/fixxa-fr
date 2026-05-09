@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, XCircle } from "lucide-react";
+import Swal from "sweetalert2";
 
 const ChatRoom = () => {
   const { id } = useParams(); // conversation_id
@@ -17,26 +18,46 @@ const ChatRoom = () => {
   const role = localStorage.getItem("role");
   const userName = localStorage.getItem("userName") || "Usuario";
   const userId = parseInt(localStorage.getItem("userId"));
+  const [caseStatus, setCaseStatus] = useState(null);
+  const [resolvingCase, setResolvingCase] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    const loadChat = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchData(`/chat/${id}`);
-        setConversation(response.data.conversation);
-        setMessages(response.data.messages);
-      } catch (err) {
-        console.error("Error al cargar el chat:", err);
-      } finally {
+  const loadChat = useCallback(async (retryCount = 0) => {
+    try {
+      if (retryCount === 0) setLoading(true);
+      const response = await fetchData(`/chat/${id}`);
+      
+      // Intentar obtener la conversación de diferentes estructuras posibles
+      const convData = response.data?.conversation || response.conversation;
+      const msgsData = response.data?.messages || response.messages || [];
+      
+      if (convData) {
+        setConversation(convData);
+        setMessages(msgsData);
+        setCaseStatus(convData.service_case?.status || null);
         setLoading(false);
         setTimeout(scrollToBottom, 100);
+      } else if (retryCount < 5) {
+        // Si no hay conversación, reintentar en 2 segundos (posible race condition)
+        console.log(`Conversación no encontrada, reintentando... (${retryCount + 1}/5)`);
+        setTimeout(() => loadChat(retryCount + 1), 2000);
+      } else {
+        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error al cargar el chat:", err);
+      if (retryCount < 5) {
+        setTimeout(() => loadChat(retryCount + 1), 2000);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [id]);
 
+  useEffect(() => {
     loadChat();
 
     /**
@@ -55,7 +76,7 @@ const ChatRoom = () => {
       if (document.visibilityState === 'hidden') return;
       try {
         const response = await fetchData(`/chat/${id}`);
-        const newMessages = response.data.messages;
+        const newMessages = response.data?.messages || response.messages || [];
         setMessages(prev => {
           // Solo actualizar si realmente hay mensajes nuevos
           if (
@@ -86,9 +107,57 @@ const ChatRoom = () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [id]);
+  }, [id, loadChat]);
 
   useEffect(scrollToBottom, [messages]);
+
+  const handleResolveFromChat = async () => {
+    const serviceCaseId = conversation?.service_case?.id;
+    if (!serviceCaseId) return;
+
+    const result = await Swal.fire({
+      icon: "question",
+      title: "Terminar caso",
+      text: "¿Confirmas que el trabajo ha sido completado? Podrás calificar al técnico a continuación.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, terminar",
+      cancelButtonText: "Cancelar",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#8C7E97",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
+    setResolvingCase(true);
+    try {
+      await fetchData(`/client/cases/${serviceCaseId}/resolve`, { method: "PATCH" });
+      await Swal.fire({
+        icon: "success",
+        title: "¡Caso terminado!",
+        text: "Ahora puedes calificar al técnico.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      navigate(`/case-detail/${serviceCaseId}`);
+    } catch (err) {
+      console.error("Error al terminar el caso desde el chat:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "No se pudo terminar el caso.",
+        background: "#1C2526",
+        color: "#fff",
+        confirmButtonColor: "#8C7E97",
+      });
+    } finally {
+      setResolvingCase(false);
+    }
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -101,10 +170,23 @@ const ChatRoom = () => {
         body: JSON.stringify({ message: newMessage }),
       });
       
-      setMessages([...messages, response.data]);
-      setNewMessage("");
+      const sentMsg = response.data || response;
+      if (sentMsg && sentMsg.id) {
+        setMessages(prev => [...prev, sentMsg]);
+        setNewMessage("");
+        setTimeout(scrollToBottom, 50);
+      }
     } catch (err) {
       console.error("Error enviando mensaje:", err);
+      const errorMessage = err.data?.message || err.message || "No se pudo enviar el mensaje.";
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al enviar',
+        text: errorMessage,
+        background: "#1C2526",
+        color: "#fff",
+        confirmButtonColor: "#8C7E97",
+      });
     } finally {
       setSending(false);
     }
@@ -121,6 +203,7 @@ const ChatRoom = () => {
   }
 
   const otherUser = role === "client" ? conversation?.technician?.user : conversation?.client?.user;
+  const otherUserName = otherUser?.name || conversation?.technician?.user?.name || conversation?.client?.user?.name || "Chat";
 
   return (
     <MainLayout roleName={userName}>
@@ -130,10 +213,22 @@ const ChatRoom = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full transition">
             <ArrowLeft size={20} />
           </button>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg">{otherUser?.name || "Cargando..."}</span>
+          <div className="flex flex-col flex-1">
+            <span className="font-bold text-lg">{otherUserName}</span>
             <span className="text-xs text-white/70">{conversation?.service_case?.title}</span>
           </div>
+          {/* Botón Terminar Caso visible desde el chat */}
+          {role === "client" && (caseStatus === "active" || caseStatus === "pending") && (
+            <button
+              onClick={handleResolveFromChat}
+              disabled={resolvingCase}
+              title="Terminar caso y calificar técnico"
+              className="flex items-center gap-2 bg-red-700 hover:bg-red-600 active:scale-95 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition shadow-lg shadow-black/40 border border-red-500/40 disabled:opacity-50"
+            >
+              <XCircle size={15} />
+              Terminar Caso
+            </button>
+          )}
         </div>
 
         {/* Mensajes */}
@@ -144,7 +239,7 @@ const ChatRoom = () => {
             </div>
           ) : (
             messages.map((msg) => {
-              const isMe = msg.sender_id === userId;
+              const isMe = msg.sender_id == userId;
               return (
                 <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                   <div
