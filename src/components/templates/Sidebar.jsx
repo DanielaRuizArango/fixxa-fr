@@ -1,4 +1,4 @@
-import { X, Power, Clock } from "lucide-react";
+import { X, Power, Clock, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { fetchData } from "../../api";
@@ -151,6 +151,12 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
               className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
               Casos
+            </button>
+            <button
+              onClick={() => { navigate("/admin/certifications"); onClose?.(); }}
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+            >
+              <Award size={15} className="text-[#8C7E97]" /> Certificados
             </button>
           </div>
         )}
