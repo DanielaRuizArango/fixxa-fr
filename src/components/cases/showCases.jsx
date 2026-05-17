@@ -814,7 +814,6 @@ const CaseDetail = () => {
                                 
                                 <div className="flex items-center gap-2">
                                   {role === "client" && isProposal && !['pending', 'resolved', 'cancelled'].includes(status) && !isAccepted && (
-                                    <>
                                       <button
                                         onClick={() => handleAcceptProposal(tech.id, techId, tech.questions)}
                                         disabled={actionLoading}
@@ -823,15 +822,16 @@ const CaseDetail = () => {
                                       >
                                         <CheckCircle size={18} />
                                       </button>
+                                  )}
+                                  {role === "client" && isProposal && !['resolved', 'cancelled'].includes(status) && (
                                       <button
                                         onClick={() => handleRejectProposal(tech.id)}
                                         disabled={actionLoading}
                                         className="flex items-center justify-center p-2 rounded-xl bg-red-600/80 text-white hover:bg-red-700 transition shadow-lg shadow-red-900/20 disabled:opacity-50"
-                                        title="Rechazar propuesta"
+                                        title={isAccepted ? "Cancelar técnico y rechazar propuesta" : "Rechazar propuesta"}
                                       >
                                         <X size={18} />
                                       </button>
-                                    </>
                                   )}
                                   {isAccepted && (
                                     <button
