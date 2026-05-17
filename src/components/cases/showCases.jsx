@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3 } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3, ChevronLeft, ChevronRight } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl } from "../../api.js";
 import Swal from "sweetalert2";
@@ -22,7 +22,7 @@ const CaseDetail = () => {
   const [comment, setComment] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
   const role = localStorage.getItem("role");
   const isAdmin = ["super_admin", "admin", "moderator"].includes(role);
@@ -470,7 +470,7 @@ const CaseDetail = () => {
                       return (
                         <div 
                           key={index}
-                          onClick={() => setSelectedImage(imgUrl)}
+                          onClick={() => setSelectedImageIndex(index)}
                           className="relative h-32 w-full rounded-2xl overflow-hidden group cursor-pointer border border-white/5"
                           title="Haz clic para ampliar la imagen"
                         >
@@ -875,28 +875,47 @@ const CaseDetail = () => {
 
       </div>
 
-      {/* Lightbox Modal de Imagen Ampliada con Lupa */}
-      {selectedImage && (
+      {/* Lightbox Modal de Imagen Ampliada con Lupa y Navegación */}
+      {selectedImageIndex !== null && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md cursor-zoom-out"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
+          onClick={() => setSelectedImageIndex(null)}
         >
           <button 
-            onClick={() => setSelectedImage(null)}
+            onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(null); }}
             className="absolute top-6 right-6 p-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-110 active:scale-95 transition-all z-50 cursor-pointer"
           >
             <X size={24} />
           </button>
+
+          {selectedImageIndex > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(selectedImageIndex - 1); }}
+              className="absolute left-4 md:left-8 p-3 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all z-50 cursor-pointer"
+            >
+              <ChevronLeft size={32} />
+            </button>
+          )}
+
           <div 
-            className="relative max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center"
+            className="relative max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             <img 
-              src={selectedImage} 
-              alt="Visualización ampliada" 
+              src={getStorageUrl(typeof images[selectedImageIndex] === "string" ? images[selectedImageIndex] : (images[selectedImageIndex].image_path || images[selectedImageIndex].url))} 
+              alt={`Visualización ampliada ${selectedImageIndex + 1}`} 
               className="max-w-full max-h-[85vh] rounded-3xl object-contain border border-white/10 shadow-2xl transition-all duration-300"
             />
           </div>
+
+          {selectedImageIndex < images.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(selectedImageIndex + 1); }}
+              className="absolute right-4 md:right-8 p-3 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all z-50 cursor-pointer"
+            >
+              <ChevronRight size={32} />
+            </button>
+          )}
         </div>
       )}
     </MainLayout>

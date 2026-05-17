@@ -121,7 +121,7 @@ const IndexCustomer = () => {
 
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold font-['Kadwa']">Mis Casos de Servicio</h1>
+            <h1 className="text-2xl font-bold font-['Kadwa']">Mis Casos</h1>
           </div>
 
           <div className="flex flex-col md:flex-row gap-3">
