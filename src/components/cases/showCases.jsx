@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3 } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl } from "../../api.js";
 import Swal from "sweetalert2";
@@ -15,6 +15,7 @@ const CaseDetail = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
   const [questions, setQuestions] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   // Estados para calificación
   const [score, setScore] = useState(0);
@@ -84,6 +85,49 @@ const CaseDetail = () => {
     } catch (err) {
       console.error("Error enviando respuesta:", err);
       const msg = err.message || "No se pudo enviar la propuesta.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditProposal = async () => {
+    setActionLoading(true);
+    setError(null);
+
+    try {
+      const myTechnicianId = parseInt(localStorage.getItem("technicianId"));
+      const myProposal = Array.isArray(caseData?.responses)
+        ? caseData.responses.find(r => r.technician_id === myTechnicianId)
+        : null;
+
+      if (!myProposal) throw new Error("No se encontró tu propuesta original.");
+
+      await fetchData(`/technician/responses/${myProposal.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          estimated_cost: estimatedCost,
+          questions: questions
+        })
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Propuesta actualizada",
+        text: "Tu propuesta ha sido modificada correctamente.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 3000,
+        timerProgressBar: true,
+      });
+
+      setIsEditing(false);
+      loadCase();
+    } catch (err) {
+      console.error("Error al actualizar propuesta:", err);
+      const msg = err.message || "No se pudo actualizar la propuesta.";
       setError(msg);
       Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
     } finally {
@@ -315,6 +359,12 @@ const CaseDetail = () => {
 
   const uniqueTechnicians = Array.from(new Map(interestedTechnicians.map(item => [item?.technician_id || item?.id || Math.random(), item])).values());
 
+  const myTechnicianId = parseInt(localStorage.getItem("technicianId"));
+  const myProposal = role === "technician" && Array.isArray(caseData?.responses)
+    ? caseData.responses.find(r => r.technician_id === myTechnicianId)
+    : null;
+  const canEditMyProposal = myProposal && caseData?.accepted_technician_id !== myTechnicianId && ['active', 'responded'].includes(caseData?.status);
+
   const images = caseData?.images || caseData?.photos || [];
   const status = caseData?.status || caseData?.state || "pending";
   const caseNumber = caseData?.id ? `FTS-${caseData.id}` : "FTS-000000";
@@ -519,56 +569,120 @@ const CaseDetail = () => {
 
             <div className="space-y-6">
               {role === "technician" ? (
-                <div className="rounded-3xl bg-[#262f31] p-6 border border-white/5 shadow-lg shadow-black/10">
-                  <h3 className="text-xl font-semibold text-white font-['Kadwa']">Enviar Propuesta</h3>
-                  <p className="mt-2 text-sm text-gray-300">
-                    Proporciona un costo estimado y un comentario para el cliente.
-                  </p>
-                  
-                  <div className="mt-6 space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1 tracking-wider">Costo Estimado ($)</label>
-                      <input 
-                        type="number" 
-                        value={estimatedCost}
-                        onChange={(e) => setEstimatedCost(e.target.value)}
-                        placeholder="Ej: 50000"
-                        className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition shadow-inner"
-                      />
+                myProposal && !isEditing ? (
+                  // MOSTRAR PROPUESTA ENVIADA
+                  <div className="rounded-3xl bg-[#262f31] p-6 border border-white/5 shadow-lg shadow-black/10">
+                    <h3 className="text-xl font-semibold text-white font-['Kadwa']">Tu Propuesta Enviada</h3>
+                    <p className="mt-2 text-xs text-gray-400">
+                      Ya has enviado una propuesta para esta solicitud de servicio.
+                    </p>
+                    
+                    <div className="mt-6 bg-[#1c2526] rounded-2xl p-4 border border-white/5">
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-white mb-2">
+                        <DollarSign size={16} className="text-green-400" />
+                        <span>Costo Estimado: <span className="text-green-400">${parseFloat(myProposal.estimated_cost).toLocaleString()}</span></span>
+                      </div>
+                      {myProposal.questions && (
+                        <p className="text-xs text-gray-300 italic mt-2 border-t border-white/5 pt-2">
+                          "{myProposal.questions}"
+                        </p>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1 tracking-wider">Tu Mensaje/Preguntas</label>
-                      <textarea 
-                        value={questions}
-                        onChange={(e) => setQuestions(e.target.value)}
-                        placeholder="Explica tu propuesta o haz preguntas..."
-                        rows={3}
-                        className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition resize-none shadow-inner"
-                      />
+
+                    <div className="mt-6 space-y-3">
+                      {/* Botón para iniciar conversación, solo si es el técnico aceptado */}
+                      {caseData?.accepted_technician_id === myTechnicianId && (
+                        <button
+                          onClick={() => handleStartChat()}
+                          className="w-full rounded-2xl bg-green-600 hover:bg-green-500 active:scale-95 px-5 py-3 text-sm font-bold text-white shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wider"
+                        >
+                          <MessageSquare size={16} />
+                          Chat con el Cliente
+                        </button>
+                      )}
+
+                      {/* Botón para editar propuesta */}
+                      {canEditMyProposal && (
+                        <button
+                          onClick={() => {
+                            setEstimatedCost(myProposal.estimated_cost);
+                            setQuestions(myProposal.questions || "");
+                            setIsEditing(true);
+                          }}
+                          className="w-full rounded-2xl bg-[#8C7E97]/25 hover:bg-[#8C7E97]/40 border border-[#8C7E97]/30 hover:border-[#8C7E97]/50 active:scale-95 px-5 py-3 text-sm font-bold text-[#d7c4ff] hover:text-white shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wider"
+                        >
+                          <Edit3 size={16} />
+                          Editar Propuesta
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <button
-                    onClick={handleInterest}
-                    disabled={actionLoading || !estimatedCost}
-                    className="mt-6 w-full rounded-2xl bg-[#8C7E97] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#8C7E97]/20 transition hover:bg-[#a493bd] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-widest"
-                  >
-                    {actionLoading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <>
-                        <CheckCircle size={18} />
-                        Enviar Propuesta
-                      </>
-                    )}
-                  </button>
-
-                  {successMessage && (
-                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
-                      <p className="text-sm font-bold text-emerald-300">{successMessage}</p>
+                ) : (
+                  // FORMULARIO DE ENVIAR O EDITAR PROPUESTA
+                  <div className="rounded-3xl bg-[#262f31] p-6 border border-white/5 shadow-lg shadow-black/10">
+                    <h3 className="text-xl font-semibold text-white font-['Kadwa']">
+                      {isEditing ? "Editar Propuesta" : "Enviar Propuesta"}
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-300">
+                      {isEditing ? "Modifica el costo estimado y tu mensaje para el cliente." : "Proporciona un costo estimado y un comentario para el cliente."}
+                    </p>
+                    
+                    <div className="mt-6 space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1 tracking-wider">Costo Estimado ($)</label>
+                        <input 
+                          type="number" 
+                          value={estimatedCost}
+                          onChange={(e) => setEstimatedCost(e.target.value)}
+                          placeholder="Ej: 50000"
+                          className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition shadow-inner"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1 tracking-wider">Tu Mensaje/Preguntas</label>
+                        <textarea 
+                          value={questions}
+                          onChange={(e) => setQuestions(e.target.value)}
+                          placeholder="Explica tu propuesta o haz preguntas..."
+                          rows={3}
+                          className="w-full bg-[#1c2526] border border-white/5 rounded-xl px-4 py-3 text-white focus:border-[#8C7E97] outline-none transition resize-none shadow-inner"
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    <div className="mt-6 flex flex-col gap-2">
+                      <button
+                        onClick={isEditing ? handleEditProposal : handleInterest}
+                        disabled={actionLoading || !estimatedCost}
+                        className="w-full rounded-2xl bg-[#8C7E97] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#8C7E97]/20 transition hover:bg-[#a493bd] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-widest"
+                      >
+                        {actionLoading ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <>
+                            <CheckCircle size={18} />
+                            <span>{isEditing ? "Guardar Cambios" : "Enviar Propuesta"}</span>
+                          </>
+                        )}
+                      </button>
+
+                      {isEditing && (
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="w-full rounded-2xl bg-[#4c5462]/30 hover:bg-[#4c5462]/50 text-gray-300 px-5 py-3 text-sm font-semibold transition active:scale-95 uppercase tracking-wider"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+
+                    {successMessage && !isEditing && (
+                      <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
+                        <p className="text-sm font-bold text-emerald-300">{successMessage}</p>
+                      </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <div className="rounded-3xl bg-[#262f31] p-6 border border-white/5 shadow-lg shadow-black/10">
                   <h3 className="text-xl font-semibold text-white font-['Kadwa']">Propuestas de Técnicos</h3>

@@ -186,12 +186,20 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
 
         {/* Ítems de navegación generales */}
         {localStorage.getItem('role') === 'technician' && (
-          <button
-            onClick={() => { navigate("/my-ratings"); onClose?.(); }}
-            className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
-          >
-            <Star size={15} className="text-[#8C7E97]" /> Mis Calificaciones
-          </button>
+          <>
+            <button
+              onClick={() => { navigate("/my-proposals"); onClose?.(); }}
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
+            >
+              <FileText size={15} className="text-[#8C7E97]" /> Mis Propuestas y Trabajos
+            </button>
+            <button
+              onClick={() => { navigate("/my-ratings"); onClose?.(); }}
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
+            >
+              <Star size={15} className="text-[#8C7E97]" /> Mis Calificaciones
+            </button>
+          </>
         )}
         {navItems.map((item, index) => (
           <button

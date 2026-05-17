@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
-import { Send, ArrowLeft, XCircle } from "lucide-react";
+import { Send, ArrowLeft, XCircle, Eye } from "lucide-react";
 import Swal from "sweetalert2";
 
 const ChatRoom = () => {
@@ -217,8 +217,19 @@ const ChatRoom = () => {
             <span className="font-bold text-lg">{otherUserName}</span>
             <span className="text-xs text-white/70">{conversation?.service_case?.title}</span>
           </div>
+          {/* Botón Ver Caso visible para ambos */}
+          {conversation?.service_case?.id && (
+            <button
+              onClick={() => navigate(`/case-detail/${conversation.service_case.id}`)}
+              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 mr-2"
+              title="Ver detalles del caso"
+            >
+              <Eye size={15} />
+              <span>Ver Caso</span>
+            </button>
+          )}
           {/* Botón Terminar Caso visible desde el chat */}
-          {role === "client" && (caseStatus === "active" || caseStatus === "pending") && (
+          {role === "client" && (caseStatus === "active" || caseStatus === "responded" || caseStatus === "pending") && (
             <button
               onClick={handleResolveFromChat}
               disabled={resolvingCase}
