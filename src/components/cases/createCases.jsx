@@ -14,7 +14,7 @@ const CreateCase = () => {
     title: "",
     description: "",
     service_type: "presential",
-    city: "",
+    city: "Manizales",
     images: [],
     latitude: null,
     longitude: null,
@@ -52,7 +52,7 @@ const CreateCase = () => {
             title: data.title || "",
             description: data.description || "",
             service_type: data.service_type || "presential",
-            city: data.city || "",
+            city: "Manizales",
             latitude: data.latitude || null,
             longitude: data.longitude || null,
             images: [], // Las imágenes existentes no se manejan por input file
@@ -216,16 +216,16 @@ const CreateCase = () => {
 
           {/* Ubicación */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[#c8d2d4]">Ubicación / Ciudad (opcional)</label>
-            <input
-              type="text"
+            <label className="text-sm text-[#c8d2d4]">Ubicación / Ciudad</label>
+            <select
               name="city"
-              value={caseData.city || ""}
+              value={caseData.city}
               onChange={handleChange}
-              placeholder="Ej: Bogotá (dejar vacío para usar tu ciudad de registro)"
               disabled={loading}
-              className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none"
-            />
+              className="p-3 rounded-xl bg-[#1f2a2b] border border-[#3f4b4d] focus:border-[#8c7e97] focus:outline-none appearance-none cursor-pointer"
+            >
+              <option value="Manizales">Manizales</option>
+            </select>
             {locationStatus && (
               <p className={`text-[10px] mt-1 ${locationStatus.includes('éxito') ? 'text-green-400' : 'text-yellow-400'}`}>
                 {locationStatus}
