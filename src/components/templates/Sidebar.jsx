@@ -1,4 +1,4 @@
-import { X, Power, Clock, Award } from "lucide-react";
+import { X, Power, Clock, Award, LayoutDashboard, ShieldAlert, Users, Wrench, FileText, Home, MessageSquare, LogOut, Star, Terminal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { fetchData } from "../../api";
@@ -8,6 +8,23 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
   const [isAvailable, setIsAvailable] = useState(null);
   const [workingHours, setWorkingHours] = useState("");
   const isTechnician = localStorage.getItem('role') === 'technician';
+
+  const getNavIcon = (label) => {
+    const norm = label.toLowerCase();
+    if (norm.includes('inicio') || norm.includes('home')) {
+      return <Home size={15} className="text-[#8C7E97]" />;
+    }
+    if (norm.includes('mensaje') || norm.includes('message') || norm.includes('chat')) {
+      return <MessageSquare size={15} className="text-[#8C7E97]" />;
+    }
+    if (norm.includes('log out') || norm.includes('cerrar') || norm.includes('salir')) {
+      return <LogOut size={15} className="text-[#8C7E97]" />;
+    }
+    if (norm.includes('calificacion') || norm.includes('rating') || norm.includes('estrella')) {
+      return <Star size={15} className="text-[#8C7E97]" />;
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (isTechnician) {
@@ -119,44 +136,50 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
             
             <button
               onClick={() => { navigate("/indexAdmin"); onClose?.(); }}
-              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
-              Dashboard
+              <LayoutDashboard size={15} className="text-[#8C7E97]" /> Dashboard
             </button>
 
             {/* Solo el Super Admin ve la gestión de administradores */}
             {localStorage.getItem('role') === 'super_admin' && (
               <button
                 onClick={() => { navigate("/manageAdmins"); onClose?.(); }}
-                className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+                className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
               >
-                Administradores
+                <ShieldAlert size={15} className="text-[#8C7E97]" /> Administradores
               </button>
             )}
 
             <button
               onClick={() => { navigate("/indexClientAdmin"); onClose?.(); }}
-              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
-              Clientes
+              <Users size={15} className="text-[#8C7E97]" /> Clientes
             </button>
             <button
               onClick={() => { navigate("/indexTechnicianAdmin"); onClose?.(); }}
-              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
-              Técnicos
+              <Wrench size={15} className="text-[#8C7E97]" /> Técnicos
             </button>
             <button
               onClick={() => { navigate("/indexCasesAdmin"); onClose?.(); }}
-              className="block w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
-              Casos
+              <FileText size={15} className="text-[#8C7E97]" /> Casos
             </button>
             <button
               onClick={() => { navigate("/admin/certifications"); onClose?.(); }}
               className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
             >
               <Award size={15} className="text-[#8C7E97]" /> Certificados
+            </button>
+            <button
+              onClick={() => { navigate("/admin/logs"); onClose?.(); }}
+              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+            >
+              <Terminal size={15} className="text-[#8C7E97]" /> Bitácora (Logs)
             </button>
           </div>
         )}
@@ -165,9 +188,9 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
         {localStorage.getItem('role') === 'technician' && (
           <button
             onClick={() => { navigate("/my-ratings"); onClose?.(); }}
-            className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] transition box-border text-white mb-1"
+            className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
           >
-            Mis Calificaciones
+            <Star size={15} className="text-[#8C7E97]" /> Mis Calificaciones
           </button>
         )}
         {navItems.map((item, index) => (
@@ -177,9 +200,10 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
               item.onClick?.();
               onClose?.();
             }}
-            className="block w-full text-left text-lg py-2 px-4 rounded hover:bg-[#8C7E97] transition box-border text-white"
+            className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
           >
-            {item.label}
+            {getNavIcon(item.label)}
+            <span>{item.label}</span>
           </button>
         ))}
       </aside>

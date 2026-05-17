@@ -30,6 +30,7 @@ import ClientDetailAdmin from "./components/admin/ClientDetail.jsx"
 import TechnicianDetailAdmin from "./components/admin/TechnicianDetail.jsx"
 import TechnicianPublicProfile from "./components/profile/TechnicianPublicProfile.jsx"
 import CertificationReview from "./components/admin/CertificationReview.jsx"
+import IndexLogsAdmin from "./components/indexes/IndexLogsAdmin"
 
 function App() {
   // Redirección automática al login cuando el token expira (401)
@@ -229,6 +230,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
             <CertificationReview />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/logs"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin", "admin", "moderator"]}>
+            <IndexLogsAdmin />
           </ProtectedRoute>
         }
       />

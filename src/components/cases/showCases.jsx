@@ -355,10 +355,19 @@ const CaseDetail = () => {
             )}
           </div>
 
-          <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-5 py-4 text-right">
+          <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-6 py-4 text-center flex flex-col items-center justify-center">
             <p className="text-sm text-gray-200">Estado</p>
             <p className="mt-2 inline-flex items-center rounded-full bg-[#1c2526] px-4 py-2 text-sm font-semibold text-white border border-[#8c7e97]/40">
-              {status}
+              {(() => {
+                const translations = {
+                  pending: "Pendiente",
+                  active: "Activo",
+                  responded: "Respondido",
+                  resolved: "Resuelto",
+                  cancelled: "Cancelado"
+                };
+                return translations[status?.toLowerCase()] || status;
+              })()}
             </p>
           </div>
         </div>
