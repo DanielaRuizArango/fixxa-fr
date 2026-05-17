@@ -155,11 +155,12 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
             allItems.push({ label: "Técnicos Calificados", onClick: () => navigate("/client-ratings"), icon: <Star size={15} className="text-[#8C7E97]" /> });
           }
 
-          const inicioItem = allItems.find(item => item.label.toLowerCase() === 'inicio');
+          const inicioItem = allItems.find(item => item.label.toLowerCase() === 'inicio' || item.label.toLowerCase() === 'dashboard');
           const logoutItem = allItems.find(item => item.label.toLowerCase() === 'log out' || item.label.toLowerCase() === 'cerrar sesión');
           
           const restItems = allItems.filter(item => 
             item.label.toLowerCase() !== 'inicio' && 
+            item.label.toLowerCase() !== 'dashboard' && 
             item.label.toLowerCase() !== 'log out' && 
             item.label.toLowerCase() !== 'cerrar sesión'
           );

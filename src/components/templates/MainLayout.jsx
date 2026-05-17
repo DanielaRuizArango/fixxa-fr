@@ -37,17 +37,21 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
     }
   }, []);
 
+  const role = localStorage.getItem('role');
+  const isAdmin = ['super_admin', 'admin', 'moderator'].includes(role);
+
   const defaultNavItems = [
-    {
-      label: "Inicio",
-      onClick: () => {
-        const role = localStorage.getItem("role");
-        if (role === "client") navigate("/indexCustomer");
-        else if (role === "technician") navigate("/indexTechnician");
-        else if (role === "super_admin") navigate("/indexAdmin");
-        else navigate("/indexClientAdmin");
-      },
-    },
+    ...(isAdmin ? [] : [
+      {
+        label: "Inicio",
+        onClick: () => {
+          if (role === "client") navigate("/indexCustomer");
+          else if (role === "technician") navigate("/indexTechnician");
+          else if (role === "super_admin") navigate("/indexAdmin");
+          else navigate("/indexClientAdmin");
+        },
+      }
+    ]),
     // Solo mostrar Mensajes si NO es admin/moderador/super_admin
     ...(['super_admin', 'admin', 'moderator'].includes(localStorage.getItem('role')) ? [] : [
       {
