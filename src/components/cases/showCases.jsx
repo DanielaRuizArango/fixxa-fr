@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle } from "lucide-react";
+import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl } from "../../api.js";
 import Swal from "sweetalert2";
@@ -21,6 +21,7 @@ const CaseDetail = () => {
   const [comment, setComment] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const role = localStorage.getItem("role");
   const isAdmin = ["super_admin", "admin", "moderator"].includes(role);
@@ -414,14 +415,26 @@ const CaseDetail = () => {
                 <div className="rounded-3xl bg-[#2b2f36] p-4 border border-white/5 shadow-lg shadow-black/10">
                   <h3 className="text-lg font-semibold mb-4 text-white font-['Kadwa']">Imágenes del caso</h3>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {images.map((image, index) => (
-                      <img
-                        key={index}
-                        src={getStorageUrl(typeof image === "string" ? image : (image.image_path || image.url))}
-                        alt={`Caso ${index + 1}`}
-                        className="h-32 w-full rounded-2xl object-cover"
-                      />
-                    ))}
+                    {images.map((image, index) => {
+                      const imgUrl = getStorageUrl(typeof image === "string" ? image : (image.image_path || image.url));
+                      return (
+                        <div 
+                          key={index}
+                          onClick={() => setSelectedImage(imgUrl)}
+                          className="relative h-32 w-full rounded-2xl overflow-hidden group cursor-pointer border border-white/5"
+                          title="Haz clic para ampliar la imagen"
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Caso ${index + 1}`}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                            <ZoomIn size={24} className="text-white scale-75 group-hover:scale-100 transition-all duration-300" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -573,6 +586,9 @@ const CaseDetail = () => {
                         const techName = tech?.technician?.user?.name || tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`;
                         const techEmail = tech?.technician?.user?.email || tech?.email || tech?.user?.email || "Sin correo";
                         const isAccepted = caseData?.accepted_technician_id === techId;
+
+                        const ratingScore = tech?.technician?.average_rating || tech?.average_rating || 0;
+                        const ratingCount = tech?.technician?.ratings_count || tech?.ratings_count || 0;
                         
                         return (
                           <div key={tech?.id || index} className={`rounded-3xl bg-[#1c2526] overflow-hidden border ${isAccepted ? 'border-emerald-500/40 shadow-inner' : 'border-white/5'} shadow-md transition-all duration-300`}>
@@ -593,8 +609,37 @@ const CaseDetail = () => {
                                       {techName}
                                     </p>
                                     <p className="text-[10px] text-gray-500 mt-0.5">{techEmail}</p>
+
+                                    {/* Calificación y Estrellas del Técnico (Solo si tiene calificaciones) */}
+                                    {ratingCount > 0 && (
+                                      <div className="flex items-center gap-1.5 mt-1">
+                                        <div className="flex items-center gap-0.5">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <Star
+                                              key={star}
+                                              size={11}
+                                              className={`${star <= Math.round(ratingScore) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}`}
+                                            />
+                                          ))}
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-400">
+                                          {ratingScore.toFixed(1)} ({ratingCount})
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Botón Ver Perfil debajo de la calificación */}
+                                    <button
+                                      onClick={() => navigate(`/technician-profile/${techId}`)}
+                                      className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#8C7E97]/15 hover:bg-[#8C7E97]/30 border border-[#8C7E97]/30 hover:border-[#8C7E97]/50 text-[#d7c4ff] hover:text-white text-[11px] font-bold transition-all shadow-md w-fit"
+                                      title="Ver perfil completo del técnico"
+                                    >
+                                      <User size={13} />
+                                      <span>Ver Perfil</span>
+                                    </button>
+
                                     {isAccepted && (
-                                      <span className="mt-1.5 bg-emerald-500/20 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 w-fit uppercase tracking-tighter">
+                                      <span className="mt-2 bg-emerald-500/20 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 w-fit uppercase tracking-tighter">
                                         <CheckCircle size={10} />
                                         Técnico aceptado
                                       </span>
@@ -628,7 +673,7 @@ const CaseDetail = () => {
                                   {tech.created_at ? new Date(tech.created_at).toLocaleDateString() : 'Reciente'}
                                 </div>
                                 
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-2">
                                   {role === "client" && isProposal && !['pending', 'resolved', 'cancelled'].includes(status) && !isAccepted && (
                                     <>
                                       <button
@@ -690,6 +735,31 @@ const CaseDetail = () => {
         )}
 
       </div>
+
+      {/* Lightbox Modal de Imagen Ampliada con Lupa */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md cursor-zoom-out"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-110 active:scale-95 transition-all z-50 cursor-pointer"
+          >
+            <X size={24} />
+          </button>
+          <div 
+            className="relative max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={selectedImage} 
+              alt="Visualización ampliada" 
+              className="max-w-full max-h-[85vh] rounded-3xl object-contain border border-white/10 shadow-2xl transition-all duration-300"
+            />
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 };
