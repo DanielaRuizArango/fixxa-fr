@@ -120,7 +120,7 @@ const IndexTechnical = () => {
         
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold font-['Kadwa']">Solicitudes Activas</h1>
+            <h1 className="text-2xl font-bold font-['Kadwa']">Casos Activos</h1>
           </div>
 
           {/* Buscador y Botón de Filtros */}
