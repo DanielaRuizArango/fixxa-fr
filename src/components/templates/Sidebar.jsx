@@ -129,91 +129,81 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Ítems Administrativos (Accesibles para super_admin, admin y moderator) */}
-        {['super_admin', 'admin', 'moderator'].includes(localStorage.getItem('role')) && (
-          <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-white/10">
-            <p className="text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 mb-2">Administración</p>
-            
-            <button
-              onClick={() => { navigate("/indexAdmin"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <LayoutDashboard size={15} className="text-[#8C7E97]" /> Dashboard
-            </button>
+        {/* Renderizado de Ítems de Navegación */}
+        {(() => {
+          const role = localStorage.getItem('role');
+          let allItems = [...navItems];
 
-            {/* Solo el Super Admin ve la gestión de administradores */}
-            {localStorage.getItem('role') === 'super_admin' && (
-              <button
-                onClick={() => { navigate("/manageAdmins"); onClose?.(); }}
-                className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-              >
-                <ShieldAlert size={15} className="text-[#8C7E97]" /> Administradores
-              </button>
-            )}
+          if (['super_admin', 'admin', 'moderator'].includes(role)) {
+            allItems.push({ label: "Dashboard", onClick: () => navigate("/indexAdmin"), icon: <LayoutDashboard size={15} className="text-[#8C7E97]" /> });
+            if (role === 'super_admin') {
+              allItems.push({ label: "Administradores", onClick: () => navigate("/manageAdmins"), icon: <ShieldAlert size={15} className="text-[#8C7E97]" /> });
+            }
+            allItems.push({ label: "Clientes", onClick: () => navigate("/indexClientAdmin"), icon: <Users size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Técnicos", onClick: () => navigate("/indexTechnicianAdmin"), icon: <Wrench size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Casos", onClick: () => navigate("/indexCasesAdmin"), icon: <FileText size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Certificados", onClick: () => navigate("/admin/certifications"), icon: <Award size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Bitácora (Logs)", onClick: () => navigate("/admin/logs"), icon: <Terminal size={15} className="text-[#8C7E97]" /> });
+          }
 
-            <button
-              onClick={() => { navigate("/indexClientAdmin"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <Users size={15} className="text-[#8C7E97]" /> Clientes
-            </button>
-            <button
-              onClick={() => { navigate("/indexTechnicianAdmin"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <Wrench size={15} className="text-[#8C7E97]" /> Técnicos
-            </button>
-            <button
-              onClick={() => { navigate("/indexCasesAdmin"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <FileText size={15} className="text-[#8C7E97]" /> Casos
-            </button>
-            <button
-              onClick={() => { navigate("/admin/certifications"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <Award size={15} className="text-[#8C7E97]" /> Certificados
-            </button>
-            <button
-              onClick={() => { navigate("/admin/logs"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
-            >
-              <Terminal size={15} className="text-[#8C7E97]" /> Bitácora (Logs)
-            </button>
-          </div>
-        )}
+          if (role === 'technician') {
+            allItems.push({ label: "Mis Propuestas y Trabajos", onClick: () => navigate("/my-proposals"), icon: <FileText size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Mis Calificaciones", onClick: () => navigate("/my-ratings"), icon: <Star size={15} className="text-[#8C7E97]" /> });
+          }
 
-        {/* Ítems de navegación generales */}
-        {localStorage.getItem('role') === 'technician' && (
-          <>
-            <button
-              onClick={() => { navigate("/my-proposals"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
-            >
-              <FileText size={15} className="text-[#8C7E97]" /> Mis Propuestas y Trabajos
-            </button>
-            <button
-              onClick={() => { navigate("/my-ratings"); onClose?.(); }}
-              className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
-            >
-              <Star size={15} className="text-[#8C7E97]" /> Mis Calificaciones
-            </button>
-          </>
-        )}
-        {navItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              item.onClick?.();
-              onClose?.();
-            }}
-            className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white mb-2"
-          >
-            {getNavIcon(item.label)}
-            <span>{item.label}</span>
-          </button>
-        ))}
+          if (role === 'client') {
+            allItems.push({ label: "Técnicos Calificados", onClick: () => navigate("/client-ratings"), icon: <Star size={15} className="text-[#8C7E97]" /> });
+          }
+
+          const inicioItem = allItems.find(item => item.label.toLowerCase() === 'inicio');
+          const logoutItem = allItems.find(item => item.label.toLowerCase() === 'log out' || item.label.toLowerCase() === 'cerrar sesión');
+          
+          const restItems = allItems.filter(item => 
+            item.label.toLowerCase() !== 'inicio' && 
+            item.label.toLowerCase() !== 'log out' && 
+            item.label.toLowerCase() !== 'cerrar sesión'
+          );
+
+          restItems.sort((a, b) => a.label.localeCompare(b.label));
+
+          const sortedNavItems = [];
+          if (inicioItem) sortedNavItems.push(inicioItem);
+          sortedNavItems.push(...restItems);
+          
+          return (
+            <div className="flex flex-col gap-2 mt-4">
+              {sortedNavItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    item.onClick?.();
+                    onClose?.();
+                  }}
+                  className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-white/10 transition text-white"
+                >
+                  {item.icon ? item.icon : getNavIcon(item.label)}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+              
+              {/* Separador para Log out */}
+              {logoutItem && (
+                <div className="mt-auto pt-4 border-t border-white/10">
+                  <button
+                    onClick={() => {
+                      logoutItem.onClick?.();
+                      onClose?.();
+                    }}
+                    className="flex items-center gap-2 w-full text-left text-sm py-2.5 px-4 rounded-xl hover:bg-red-500/10 text-red-400 transition"
+                  >
+                    {logoutItem.icon ? logoutItem.icon : getNavIcon(logoutItem.label)}
+                    <span>{logoutItem.label}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </aside>
     </>
   );

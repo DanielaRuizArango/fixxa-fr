@@ -26,6 +26,7 @@ import CaseDetail from "./components/cases/showCases.jsx"
 import ChatList from "./components/chat/ChatList.jsx"
 import ChatRoom from "./components/chat/ChatRoom.jsx"
 import MyRatings from "./components/technician/MyRatings.jsx"
+import MyRatingsClient from "./components/client/MyRatingsClient.jsx"
 import MyProposals from "./components/technician/MyProposals.jsx"
 import ClientDetailAdmin from "./components/admin/ClientDetail.jsx"
 import TechnicianDetailAdmin from "./components/admin/TechnicianDetail.jsx"
@@ -85,6 +86,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["client"]}>
             <CreateCases />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/client-ratings"
+        element={
+          <ProtectedRoute allowedRoles={["client"]}>
+            <MyRatingsClient />
           </ProtectedRoute>
         }
       />
