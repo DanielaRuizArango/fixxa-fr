@@ -709,19 +709,44 @@ const CaseDetail = () => {
                             <div className="p-5">
                               <div className="flex items-start justify-between gap-4 mb-3">
                                 <div className="flex items-center gap-3">
-                                  <div 
-                                    onClick={() => navigate(`/technician-profile/${techId}`)}
-                                    className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] shrink-0 cursor-pointer hover:bg-[#8C7E97]/30 transition-colors"
-                                  >
-                                    <User size={20} />
+                                  <div className="relative">
+                                    <div 
+                                      onClick={() => navigate(`/technician-profile/${techId}`)}
+                                      className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] shrink-0 cursor-pointer hover:bg-[#8C7E97]/30 transition-colors"
+                                    >
+                                      <User size={20} />
+                                    </div>
+                                    <span 
+                                      className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-[#1c2526] ${
+                                        (tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
+                                          ? "bg-emerald-400 animate-pulse"
+                                          : "bg-gray-500"
+                                      }`}
+                                      title={
+                                        (tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
+                                          ? "En línea"
+                                          : "Desconectado"
+                                      }
+                                    />
                                   </div>
                                   <div>
-                                    <p 
-                                      onClick={() => navigate(`/technician-profile/${techId}`)}
-                                      className="font-bold text-white text-base leading-tight cursor-pointer hover:text-[#8C7E97] transition-colors"
-                                    >
-                                      {techName}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <p 
+                                        onClick={() => navigate(`/technician-profile/${techId}`)}
+                                        className="font-bold text-white text-base leading-tight cursor-pointer hover:text-[#8C7E97] transition-colors"
+                                      >
+                                        {techName}
+                                      </p>
+                                      <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                        (tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
+                                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                          : "bg-gray-500/10 text-gray-400 border border-white/5"
+                                      }`}>
+                                        {(tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
+                                          ? "En línea"
+                                          : "Desconectado"}
+                                      </span>
+                                    </div>
                                     <p className="text-[10px] text-gray-500 mt-0.5">{techEmail}</p>
 
                                     {/* Calificación y Estrellas del Técnico (Solo si tiene calificaciones) */}
