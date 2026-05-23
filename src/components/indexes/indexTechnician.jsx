@@ -212,8 +212,8 @@ const IndexTechnical = () => {
                     onChange={(e) => setSortOrder(e.target.value)}
                     className="bg-[#1c2526] border border-white/5 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8C7E97]"
                   >
-                    <option value="desc">Descendente (Más reciente/mayor)</option>
-                    <option value="asc">Ascendente (Más antiguo/menor)</option>
+                    <option value="desc">Descendente</option>
+                    <option value="asc">Ascendente</option>
                   </select>
                 </div>
               </div>
