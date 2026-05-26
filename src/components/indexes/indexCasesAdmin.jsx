@@ -9,11 +9,13 @@ import {
   AlertCircle,
   FileText,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  X
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
 import SystemAlerts from "../admin/SystemAlerts";
+import Swal from "sweetalert2";
 
 const IndexCasesAdmin = () => {
   const navigate = useNavigate();
@@ -95,6 +97,49 @@ const IndexCasesAdmin = () => {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const handleCancelCase = async (e, caseId) => {
+    e.stopPropagation();
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Cancelar Caso",
+      text: "¿Estás seguro de que deseas cancelar este caso?",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, mantener",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await fetchData(`/admin/cases/${caseId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      await Swal.fire({
+        icon: "success",
+        title: "Caso cancelado",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      loadCases(1); // recargar
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "No se pudo cancelar el caso.",
+        background: "#1C2526",
+        color: "#fff",
+        confirmButtonColor: "#8C7E97",
+      });
+    }
   };
 
   return (
@@ -212,9 +257,20 @@ const IndexCasesAdmin = () => {
               >
                 <div className="flex justify-between items-start mb-3">
                   {getStatusBadge(caseItem.status)}
-                  <div className="flex items-center gap-1 text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
-                    <Calendar size={10} />
-                    {formatDate(caseItem.created_at)}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
+                      <Calendar size={10} />
+                      {formatDate(caseItem.created_at)}
+                    </div>
+                    {caseItem.status !== 'cancelled' && (
+                      <button
+                        onClick={(e) => handleCancelCase(e, caseItem.id)}
+                        className="text-[10px] font-bold text-gray-400 hover:text-red-400 border border-transparent hover:border-red-500/30 transition-colors px-2 py-0.5 rounded-full hover:bg-red-500/10"
+                        title="Cancelar Caso"
+                      >
+                        Cancelar
+                      </button>
+                    )}
                   </div>
                 </div>
 

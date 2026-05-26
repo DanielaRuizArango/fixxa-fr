@@ -253,6 +253,50 @@ const CaseDetail = () => {
     }
   };
 
+  const handleUpdateStatus = async (newStatus) => {
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Cambiar estado del caso",
+      text: `¿Estás seguro de que deseas cambiar el estado a '${newStatus}'?`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, cambiar",
+      cancelButtonText: "Cancelar",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#8C7E97",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+
+    setActionLoading(true);
+    setError(null);
+    try {
+      const response = await fetchData(`/admin/cases/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setSuccessMessage("Estado actualizado correctamente.");
+      setCaseData(response.data);
+      Swal.fire({
+        icon: "success",
+        title: "Estado actualizado",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Error al actualizar estado:", err);
+      const msg = err.message || "No se pudo actualizar el estado.";
+      setError(msg);
+      Swal.fire({ icon: "error", title: "Error", text: msg, background: "#1C2526", color: "#fff", confirmButtonColor: "#8C7E97" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleResolveCase = async () => {
     const result = await Swal.fire({
       icon: "question",
@@ -408,18 +452,33 @@ const CaseDetail = () => {
 
           <div className="rounded-3xl bg-[#8C7E97]/10 border border-[#8C7E97]/40 px-6 py-4 text-center flex flex-col items-center justify-center">
             <p className="text-sm text-gray-200">Estado</p>
-            <p className="mt-2 inline-flex items-center rounded-full bg-[#1c2526] px-4 py-2 text-sm font-semibold text-white border border-[#8c7e97]/40">
-              {(() => {
-                const translations = {
-                  pending: "Pendiente",
-                  active: "Activo",
-                  responded: "Respondido",
-                  resolved: "Resuelto",
-                  cancelled: "Cancelado"
-                };
-                return translations[status?.toLowerCase()] || status;
-              })()}
-            </p>
+            {isAdmin ? (
+              <select
+                value={status}
+                onChange={(e) => handleUpdateStatus(e.target.value)}
+                disabled={actionLoading}
+                className="mt-2 bg-[#1c2526] border border-[#8c7e97]/40 rounded-xl px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer appearance-none text-center shadow-inner hover:bg-[#262f31] transition-colors"
+              >
+                <option value="pending">Pendiente</option>
+                <option value="active">Activo</option>
+                <option value="responded">Respondido</option>
+                <option value="resolved">Resuelto</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+            ) : (
+              <p className="mt-2 inline-flex items-center rounded-full bg-[#1c2526] px-4 py-2 text-sm font-semibold text-white border border-[#8c7e97]/40">
+                {(() => {
+                  const translations = {
+                    pending: "Pendiente",
+                    active: "Activo",
+                    responded: "Respondido",
+                    resolved: "Resuelto",
+                    cancelled: "Cancelado"
+                  };
+                  return translations[status?.toLowerCase()] || status;
+                })()}
+              </p>
+            )}
           </div>
         </div>
 
