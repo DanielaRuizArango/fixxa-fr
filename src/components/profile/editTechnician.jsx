@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchData } from "../../api";
 import AssetManager from "./AssetManager";
+import { ArrowLeft } from "lucide-react";
 
 const EditTechnician = () => {
   const navigate = useNavigate();
@@ -128,9 +129,17 @@ const EditTechnician = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1C2526] via-[#263032] to-[#1C2526] flex items-center justify-center p-4 py-10">
-      <div className="w-full max-w-lg bg-[#262f31] rounded-3xl p-7 text-white shadow-2xl border border-[#3f4b4d]">
-        <h1 className="text-3xl font-bold text-center mb-5">Editar Perfil Técnico</h1>
+    <div className="min-h-screen relative bg-gradient-to-b from-[#1C2526] via-[#263032] to-[#1C2526] flex items-center justify-center p-4 py-10">
+      <button 
+        onClick={() => navigate(-1)}
+        className="absolute left-4 top-4 md:left-10 md:top-6 flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-lg hover:bg-[#77678a] transition text-white z-10"
+      >
+        <ArrowLeft size={18} />
+        Volver
+      </button>
+      <div className="w-full max-w-lg">
+        <div className="bg-[#262f31] rounded-3xl p-7 text-white shadow-2xl border border-[#3f4b4d]">
+          <h1 className="text-3xl font-bold text-center mb-5">Editar Perfil Técnico</h1>
 
         {error && (
           <div className="bg-red-500/20 border border-red-500 text-red-100 p-3 rounded-xl mb-4 text-sm text-center">
@@ -314,6 +323,7 @@ const EditTechnician = () => {
           <p className="text-center text-white/50 text-sm mb-6">Sube fotos de tus herramientas, certificaciones y trabajos previos para generar más confianza en tus clientes.</p>
           <AssetManager />
         </div>
+      </div>
       </div>
     </div>
   );

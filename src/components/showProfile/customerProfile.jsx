@@ -62,7 +62,7 @@ const CustomerProfile = () => {
         className="absolute left-10 top-6 flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-lg hover:bg-[#77678a] transition"
       >
         <ArrowLeft size={18} />
-        Back
+        Volver
       </button>
 
       <div className="flex justify-center pt-10 px-4">

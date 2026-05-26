@@ -128,16 +128,15 @@ const EditAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#2B2F36] text-white font-['Kadwa'] p-4 md:p-10">
-      <div className="max-w-4xl mx-auto">
-        <button 
-          onClick={() => navigate('/indexAdmin')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Volver a la lista</span>
-        </button>
-
+    <div className="min-h-screen relative bg-[#2B2F36] text-white font-['Kadwa'] p-4 md:p-10">
+      <button 
+        onClick={() => navigate(-1)}
+        className="absolute left-4 top-4 md:left-10 md:top-6 flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-lg hover:bg-[#77678a] transition text-white z-10"
+      >
+        <ArrowLeft size={18} />
+        Volver
+      </button>
+      <div className="max-w-4xl mx-auto pt-10 md:pt-0">
         <div className="bg-[#262f31] rounded-3xl overflow-hidden shadow-2xl border border-white/5">
           <div className="bg-[#8C7E97] p-8">
             <div className="flex items-center gap-4">
@@ -311,7 +310,7 @@ const EditAdmin = () => {
             <div className="mt-12 flex justify-end gap-4">
               <button
                 type="button"
-                onClick={() => navigate('/indexAdmin')}
+                onClick={() => navigate(-1)}
                 className="px-8 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-widest"
               >
                 Cancelar
