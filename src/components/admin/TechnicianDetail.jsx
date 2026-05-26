@@ -15,7 +15,8 @@ import {
   Award,
   MessageSquare,
   Activity,
-  Image as ImageIcon
+  Image as ImageIcon,
+  X
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
@@ -26,6 +27,7 @@ const TechnicianDetail = () => {
   const [tech, setTech] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [zoomedImg, setZoomedImg] = useState(null);
 
   useEffect(() => {
     const loadTechData = async () => {
@@ -127,8 +129,12 @@ const TechnicianDetail = () => {
                </div>
                <div className="grid grid-cols-2 gap-2">
                   {tech.assets?.map((asset) => (
-                    <div key={asset.id} className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group">
-                       <img src={getStorageUrl(asset.file_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                    <div 
+                      key={asset.id} 
+                      className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group"
+                      onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
+                    >
+                       <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
                     </div>
                   ))}
                   {(!tech.assets || tech.assets.length === 0) && (
@@ -222,6 +228,26 @@ const TechnicianDetail = () => {
         </div>
 
       </div>
+
+      {zoomedImg && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setZoomedImg(null)}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition"
+            onClick={() => setZoomedImg(null)}
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={zoomedImg}
+            alt="Documento ampliado"
+            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </MainLayout>
   );
 };

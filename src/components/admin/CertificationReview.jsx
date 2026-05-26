@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { fetchData, getStorageUrl } from "../../api";
 import Swal from "sweetalert2";
 import MainLayout from "../templates/MainLayout";
-import { Award, X, CheckCircle, XCircle, ZoomIn, User, Calendar, Shield, Loader2 } from "lucide-react";
+import {
+  Award, X, CheckCircle, XCircle, ZoomIn, User, Calendar,
+  Shield, Loader2, CreditCard, Phone, Mail, MapPin, Hash,
+  FileText, ChevronRight, Eye,
+} from "lucide-react";
 
 /* ─── helpers ────────────────────────────────────────────────── */
-const TABS = [
-  { key: "", label: "Todos" },
-  { key: "pending", label: "Pendientes" },
+const STATUS_TABS = [
+  { key: "",         label: "Todos" },
+  { key: "pending",  label: "Pendientes" },
   { key: "approved", label: "Aprobados" },
   { key: "rejected", label: "Rechazados" },
 ];
@@ -24,38 +27,43 @@ const fmt = (d) =>
 
 /* ─── component ──────────────────────────────────────────────── */
 const CertificationReview = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab]       = useState("");
-  const [certs, setCerts]               = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [zoomedImg, setZoomedImg]       = useState(null);       // URL for lightbox
-  const [rejectTarget, setRejectTarget] = useState(null);       // cert being rejected
-  const [rejectReason, setRejectReason] = useState("");
-  const [rejectError, setRejectError]   = useState("");
+  /* view mode: "certifications" | "id_documents" */
+  const [viewMode, setViewMode]           = useState("certifications");
+  const [activeTab, setActiveTab]         = useState("");
+  const [items, setItems]                 = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
+
+  /* modals */
+  const [zoomedImg, setZoomedImg]         = useState(null);
+  const [detailItem, setDetailItem]       = useState(null);   // item for detail modal
+  const [rejectTarget, setRejectTarget]   = useState(null);
+  const [rejectReason, setRejectReason]   = useState("");
+  const [rejectError, setRejectError]     = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const textareaRef = useRef(null);
 
-  /* fetch */
-  const loadCerts = async (status = "") => {
+  /* ── fetch ── */
+  const loadItems = async (mode = viewMode, status = activeTab) => {
     setLoading(true);
     setError(null);
     try {
-      const qs = status ? `?status=${status}` : "";
-      const res = await fetchData(`/admin/certifications${qs}`);
-      // Laravel paginate() wraps items in res.data.data
-      // res.data = paginator object, res.data.data = actual array
-      const items = res?.data?.data ?? res?.data ?? res ?? [];
-      setCerts(Array.isArray(items) ? items : []);
+      const endpoint = mode === "certifications"
+        ? `/admin/certifications`
+        : `/admin/id-documents`;
+      const qs  = status ? `?status=${status}` : "";
+      const res = await fetchData(`${endpoint}${qs}`);
+      const data = res?.data?.data ?? res?.data ?? res ?? [];
+      setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
-      setError("No se pudieron cargar las certificaciones.");
+      setError("No se pudieron cargar los registros.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadCerts(activeTab); }, [activeTab]);
+  useEffect(() => { loadItems(viewMode, activeTab); }, [viewMode, activeTab]);
 
   /* focus textarea when reject modal opens */
   useEffect(() => {
@@ -66,11 +74,12 @@ const CertificationReview = () => {
     }
   }, [rejectTarget]);
 
-  /* approve */
-  const handleApprove = async (cert) => {
+  /* ── approve ── */
+  const handleApprove = async (item) => {
+    const isCert = viewMode === "certifications";
     const result = await Swal.fire({
-      title: "¿Aprobar certificación?",
-      html: `<span style="color:#c8d2d4">Se aprobará el certificado de <b>${cert.technician?.user?.name ?? "este técnico"}</b>. Se le notificará por correo.</span>`,
+      title: isCert ? "¿Aprobar certificación?" : "¿Aprobar cédula?",
+      html: `<span style="color:#c8d2d4">Se aprobará el documento de <b>${item.technician?.user?.name ?? "este técnico"}</b>. Se le notificará por correo.</span>`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#22c55e",
@@ -82,14 +91,17 @@ const CertificationReview = () => {
     });
     if (!result.isConfirmed) return;
 
+    const endpoint = isCert
+      ? `/admin/certifications/${item.id}/approve`
+      : `/admin/id-documents/${item.id}/approve`;
+
     setActionLoading(true);
     try {
-      await fetchData(`/admin/certifications/${cert.id}/approve`, { method: "PATCH" });
-      setCerts((prev) =>
-        prev.map((c) =>
-          c.id === cert.id ? { ...c, status: "approved", reviewed_by: "Tú" } : c
-        )
+      await fetchData(endpoint, { method: "PATCH" });
+      setItems((prev) =>
+        prev.map((c) => c.id === item.id ? { ...c, status: "approved" } : c)
       );
+      if (detailItem?.id === item.id) setDetailItem((d) => ({ ...d, status: "approved" }));
       Swal.fire({
         icon: "success", title: "Aprobado",
         toast: true, position: "top-end",
@@ -103,23 +115,30 @@ const CertificationReview = () => {
     }
   };
 
-  /* reject */
+  /* ── reject ── */
   const submitReject = async () => {
     if (!rejectReason.trim()) { setRejectError("El motivo es obligatorio."); return; }
+    const isCert = viewMode === "certifications";
+    const endpoint = isCert
+      ? `/admin/certifications/${rejectTarget.id}/reject`
+      : `/admin/id-documents/${rejectTarget.id}/reject`;
+
     setActionLoading(true);
     try {
-      await fetchData(`/admin/certifications/${rejectTarget.id}/reject`, {
+      await fetchData(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rejection_reason: rejectReason.trim() }),
       });
-      setCerts((prev) =>
+      setItems((prev) =>
         prev.map((c) =>
           c.id === rejectTarget.id
-            ? { ...c, status: "rejected", rejection_reason: rejectReason.trim(), reviewed_by: "Tú" }
+            ? { ...c, status: "rejected", rejection_reason: rejectReason.trim() }
             : c
         )
       );
+      if (detailItem?.id === rejectTarget.id)
+        setDetailItem((d) => ({ ...d, status: "rejected", rejection_reason: rejectReason.trim() }));
       setRejectTarget(null);
       Swal.fire({
         icon: "success", title: "Rechazado",
@@ -134,31 +153,56 @@ const CertificationReview = () => {
     }
   };
 
-  /* sidebar nav */
-  const navItems = [];
+  const isCertMode = viewMode === "certifications";
 
   return (
-    <MainLayout
-      roleName="Admin"
-      profileRoute="/adminProfile"
-      navItems={navItems}
-    >
+    <MainLayout roleName="Admin" profileRoute="/adminProfile" navItems={[]}>
+
       {/* ── header ── */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-6">
         <div className="p-3 rounded-2xl bg-[#8C7E97]/20 border border-[#8C7E97]/30">
           <Award size={28} className="text-[#8C7E97]" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Certificaciones</h1>
-          <p className="text-sm text-white/40 mt-0.5">Revisión y aprobación de certificados de técnicos</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Revisión de Documentos</h1>
+          <p className="text-sm text-white/40 mt-0.5">Aprobación de certificados y cédulas de técnicos</p>
         </div>
       </div>
 
-      {/* ── tabs ── */}
+      {/* ── view mode toggle ── */}
+      <div className="flex gap-3 mb-6">
+        <button
+          id="btn-view-certifications"
+          onClick={() => { setViewMode("certifications"); setActiveTab(""); }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold border transition-all duration-200 ${
+            isCertMode
+              ? "bg-[#8C7E97] border-[#8C7E97] text-white shadow-lg shadow-[#8C7E97]/20"
+              : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <Award size={16} />
+          Certificaciones
+        </button>
+        <button
+          id="btn-view-id-documents"
+          onClick={() => { setViewMode("id_documents"); setActiveTab(""); }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold border transition-all duration-200 ${
+            !isCertMode
+              ? "bg-[#8C7E97] border-[#8C7E97] text-white shadow-lg shadow-[#8C7E97]/20"
+              : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <CreditCard size={16} />
+          Cédulas
+        </button>
+      </div>
+
+      {/* ── status tabs ── */}
       <div className="flex gap-1 p-1 rounded-2xl bg-[#262f31] border border-white/5 w-fit mb-8">
-        {TABS.map((t) => (
+        {STATUS_TABS.map((t) => (
           <button
             key={t.key}
+            id={`tab-status-${t.key || "all"}`}
             onClick={() => setActiveTab(t.key)}
             className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
               activeTab === t.key
@@ -171,113 +215,135 @@ const CertificationReview = () => {
         ))}
       </div>
 
-      {/* ── states ── */}
+      {/* ── loading ── */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <Loader2 size={40} className="text-[#8C7E97] animate-spin" />
-          <p className="text-white/40 text-sm">Cargando certificaciones…</p>
+          <p className="text-white/40 text-sm">Cargando registros…</p>
         </div>
       )}
 
+      {/* ── error ── */}
       {!loading && error && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-300 rounded-2xl p-4 text-sm">
           {error}
-          <button onClick={() => loadCerts(activeTab)} className="ml-3 underline text-red-200 hover:text-white">
+          <button onClick={() => loadItems()} className="ml-3 underline text-red-200 hover:text-white">
             Reintentar
           </button>
         </div>
       )}
 
-      {!loading && !error && certs.length === 0 && (
+      {/* ── empty ── */}
+      {!loading && !error && items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-white/30">
-          <Award size={48} className="opacity-30" />
-          <p className="text-sm">No hay certificaciones para mostrar.</p>
+          {isCertMode ? <Award size={48} className="opacity-30" /> : <CreditCard size={48} className="opacity-30" />}
+          <p className="text-sm">
+            No hay {isCertMode ? "certificaciones" : "cédulas"} para mostrar.
+          </p>
         </div>
       )}
 
       {/* ── grid ── */}
-      {!loading && !error && certs.length > 0 && (
+      {!loading && !error && items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {certs.map((cert) => {
-            const meta = STATUS_META[cert.status] ?? STATUS_META.pending;
+          {items.map((item) => {
+            const meta = STATUS_META[item.status] ?? STATUS_META.pending;
+            const user = item.technician?.user ?? {};
             return (
               <div
-                key={cert.id}
-                className="bg-[#262f31] border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-xl hover:shadow-2xl hover:border-white/10 transition-all duration-300"
+                key={item.id}
+                id={`card-doc-${item.id}`}
+                className="bg-[#262f31] border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-xl hover:shadow-2xl hover:border-[#8C7E97]/30 transition-all duration-300 group cursor-pointer"
+                onClick={() => setDetailItem(item)}
               >
                 {/* image */}
-                <div
-                  className="relative aspect-video bg-[#1a2324] cursor-zoom-in group"
-                  onClick={() => setZoomedImg(getStorageUrl(cert.image_path))}
-                >
-                  {cert.image_path ? (
+                <div className="relative aspect-video bg-[#1a2324]">
+                  {item.image_path ? (
                     <img
-                      src={getStorageUrl(cert.image_path)}
-                      alt="Certificado"
+                      src={getStorageUrl(item.image_path)}
+                      alt={isCertMode ? "Certificado" : "Cédula"}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/20">
-                      <Award size={48} />
+                      {isCertMode ? <Award size={48} /> : <CreditCard size={48} />}
                     </div>
                   )}
-                  {/* zoom hint */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <ZoomIn size={32} className="text-white drop-shadow" />
+                  {/* overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm font-semibold">
+                      <Eye size={16} /> Ver detalle
+                    </div>
                   </div>
-                  {/* status badge over image */}
+                  {/* status badge */}
                   <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold border ${meta.bg} ${meta.text} ${meta.border} backdrop-blur-sm`}>
                     {meta.label}
                   </div>
                 </div>
 
                 {/* body */}
-                <div className="p-5 flex flex-col gap-3 flex-1">
-                  {/* technician */}
+                <div className="p-5 flex flex-col gap-2 flex-1">
                   <div className="flex items-center gap-2">
-                    <User size={14} className="text-[#8C7E97]" />
+                    <User size={14} className="text-[#8C7E97] shrink-0" />
                     <span className="text-sm font-semibold text-white truncate">
-                      {cert.technician?.user?.name ?? "Técnico desconocido"}
+                      {user.name ?? "Técnico desconocido"}
                     </span>
                   </div>
 
-                  {/* description */}
-                  {cert.description && (
-                    <p className="text-xs text-white/50 leading-relaxed line-clamp-2">{cert.description}</p>
+                  {/* cédula preview */}
+                  {user.id_number && (
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={13} className="text-[#8C7E97]/70 shrink-0" />
+                      <span className="text-xs text-white/50 font-mono">{user.id_number}</span>
+                    </div>
                   )}
 
-                  {/* meta row */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40 mt-auto">
+                  {/* city */}
+                  {user.city && (
+                    <div className="flex items-center gap-2">
+                      <MapPin size={13} className="text-[#8C7E97]/70 shrink-0" />
+                      <span className="text-xs text-white/50">{user.city}</span>
+                    </div>
+                  )}
+
+                  {item.description && (
+                    <p className="text-xs text-white/40 leading-relaxed line-clamp-2 mt-1">{item.description}</p>
+                  )}
+
+                  {/* date row */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/30 mt-auto pt-2 border-t border-white/5">
                     <span className="flex items-center gap-1">
-                      <Calendar size={11} /> {fmt(cert.created_at)}
+                      <Calendar size={11} /> {fmt(item.created_at)}
                     </span>
-                    {cert.reviewer?.name && (
+                    {item.reviewer?.name && (
                       <span className="flex items-center gap-1">
-                        <Shield size={11} /> Revisado por {cert.reviewer.name}
+                        <Shield size={11} /> {item.reviewer.name}
                       </span>
                     )}
                   </div>
 
                   {/* rejection reason */}
-                  {cert.status === "rejected" && cert.rejection_reason && (
+                  {item.status === "rejected" && item.rejection_reason && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs text-red-300 leading-relaxed">
                       <span className="font-bold block mb-1">Motivo de rechazo:</span>
-                      {cert.rejection_reason}
+                      {item.rejection_reason}
                     </div>
                   )}
 
-                  {/* actions */}
-                  {cert.status === "pending" && (
-                    <div className="flex gap-2 pt-1 mt-1 border-t border-white/5">
+                  {/* quick actions */}
+                  {item.status === "pending" && (
+                    <div className="flex gap-2 pt-1 mt-1 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
                       <button
-                        onClick={() => handleApprove(cert)}
+                        id={`btn-approve-${item.id}`}
+                        onClick={() => handleApprove(item)}
                         disabled={actionLoading}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white text-sm font-semibold transition disabled:opacity-50"
                       >
                         <CheckCircle size={16} /> Aprobar
                       </button>
                       <button
-                        onClick={() => setRejectTarget(cert)}
+                        id={`btn-reject-${item.id}`}
+                        onClick={() => setRejectTarget(item)}
                         disabled={actionLoading}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition disabled:opacity-50"
                       >
@@ -292,13 +358,225 @@ const CertificationReview = () => {
         </div>
       )}
 
-      {/* ── Lightbox modal ── */}
+      {/* ══════════════════════════════════════════════════════════════
+          DETAIL MODAL
+      ══════════════════════════════════════════════════════════════ */}
+      {detailItem && (() => {
+        const user = detailItem.technician?.user ?? {};
+        const meta = STATUS_META[detailItem.status] ?? STATUS_META.pending;
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setDetailItem(null)}
+          >
+            <div
+              className="bg-[#1C2526] border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* modal header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-2xl bg-[#8C7E97]/20">
+                    {isCertMode ? <Award size={22} className="text-[#8C7E97]" /> : <CreditCard size={22} className="text-[#8C7E97]" />}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">
+                      {isCertMode ? "Detalle de Certificación" : "Detalle de Cédula"}
+                    </h2>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.text} ${meta.border}`}>
+                      {meta.label}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  id="btn-close-detail-modal"
+                  onClick={() => setDetailItem(null)}
+                  className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* image */}
+              {detailItem.image_path && (
+                <div
+                  className="relative bg-[#1a2324] cursor-zoom-in group"
+                  style={{ maxHeight: "300px", overflow: "hidden" }}
+                  onClick={() => setZoomedImg(getStorageUrl(detailItem.image_path))}
+                >
+                  <img
+                    src={getStorageUrl(detailItem.image_path)}
+                    alt="Documento"
+                    className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    style={{ maxHeight: "300px", objectFit: "cover" }}
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm font-semibold">
+                      <ZoomIn size={16} /> Ampliar imagen
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* info */}
+              <div className="p-6 flex flex-col gap-5">
+
+                {/* technician info section */}
+                <div>
+                  <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <User size={12} /> Información del Técnico
+                  </h3>
+                  <div className="bg-[#262f31] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    {/* name */}
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <User size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Nombre completo</p>
+                        <p className="text-sm font-semibold text-white">{user.name ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    {/* cédula */}
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <Hash size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Número de cédula</p>
+                        <p className="text-sm font-semibold text-white font-mono tracking-wider">
+                          {user.id_number ?? "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* city */}
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <MapPin size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Ciudad</p>
+                        <p className="text-sm font-semibold text-white">{user.city ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    {/* phone */}
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <Phone size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Teléfono</p>
+                        <p className="text-sm font-semibold text-white">{user.phone ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    {/* email */}
+                    <div className="flex items-start gap-3 sm:col-span-2">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <Mail size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Correo electrónico</p>
+                        <p className="text-sm font-semibold text-white">{user.email ?? "—"}</p>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* document info section */}
+                <div>
+                  <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <FileText size={12} /> Información del Documento
+                  </h3>
+                  <div className="bg-[#262f31] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                        <Calendar size={14} className="text-[#8C7E97]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/40 mb-0.5">Fecha de subida</p>
+                        <p className="text-sm font-semibold text-white">{fmt(detailItem.created_at)}</p>
+                      </div>
+                    </div>
+
+                    {detailItem.reviewer?.name && (
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                          <Shield size={14} className="text-[#8C7E97]" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white/40 mb-0.5">Revisado por</p>
+                          <p className="text-sm font-semibold text-white">{detailItem.reviewer.name}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {detailItem.description && (
+                      <div className="flex items-start gap-3 sm:col-span-2">
+                        <div className="p-2 rounded-xl bg-[#8C7E97]/15 shrink-0">
+                          <FileText size={14} className="text-[#8C7E97]" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white/40 mb-0.5">Descripción</p>
+                          <p className="text-sm text-white/80 leading-relaxed">{detailItem.description}</p>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+
+                {/* rejection reason */}
+                {detailItem.status === "rejected" && detailItem.rejection_reason && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-sm text-red-300 leading-relaxed">
+                    <span className="font-bold block mb-1">Motivo de rechazo:</span>
+                    {detailItem.rejection_reason}
+                  </div>
+                )}
+
+                {/* actions */}
+                {detailItem.status === "pending" && (
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      id={`btn-detail-approve-${detailItem.id}`}
+                      onClick={() => { handleApprove(detailItem); }}
+                      disabled={actionLoading}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-semibold transition disabled:opacity-50"
+                    >
+                      {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <><CheckCircle size={18} /> Aprobar</>}
+                    </button>
+                    <button
+                      id={`btn-detail-reject-${detailItem.id}`}
+                      onClick={() => { setRejectTarget(detailItem); setDetailItem(null); }}
+                      disabled={actionLoading}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-semibold transition disabled:opacity-50"
+                    >
+                      <XCircle size={18} /> Rechazar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ══════════════════════════════════════════════════════════════
+          LIGHTBOX
+      ══════════════════════════════════════════════════════════════ */}
       {zoomedImg && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
           onClick={() => setZoomedImg(null)}
         >
           <button
+            id="btn-close-lightbox"
             className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition"
             onClick={() => setZoomedImg(null)}
           >
@@ -306,33 +584,37 @@ const CertificationReview = () => {
           </button>
           <img
             src={zoomedImg}
-            alt="Certificado ampliado"
+            alt="Documento ampliado"
             className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
 
-      {/* ── Reject modal ── */}
+      {/* ══════════════════════════════════════════════════════════════
+          REJECT MODAL
+      ══════════════════════════════════════════════════════════════ */}
       {rejectTarget && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
           onClick={() => !actionLoading && setRejectTarget(null)}
         >
           <div
             className="bg-[#1C2526] border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl flex flex-col gap-5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-red-500/20">
                   <XCircle size={22} className="text-red-400" />
                 </div>
-                <h2 className="text-lg font-bold text-white">Rechazar certificado</h2>
+                <h2 className="text-lg font-bold text-white">
+                  {isCertMode ? "Rechazar certificado" : "Rechazar cédula"}
+                </h2>
               </div>
               {!actionLoading && (
                 <button
+                  id="btn-close-reject-modal"
                   onClick={() => setRejectTarget(null)}
                   className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition"
                 >
@@ -341,29 +623,43 @@ const CertificationReview = () => {
               )}
             </div>
 
-            <p className="text-sm text-white/50">
-              Técnico: <span className="text-white font-semibold">{rejectTarget.technician?.user?.name ?? "Técnico"}</span>
-            </p>
+            {/* technician info summary */}
+            <div className="bg-[#262f31] rounded-2xl p-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <User size={14} className="text-[#8C7E97]" />
+                <span className="text-sm font-semibold text-white">
+                  {rejectTarget.technician?.user?.name ?? "Técnico"}
+                </span>
+              </div>
+              {rejectTarget.technician?.user?.id_number && (
+                <div className="flex items-center gap-2">
+                  <Hash size={13} className="text-[#8C7E97]/70" />
+                  <span className="text-xs text-white/50 font-mono">
+                    {rejectTarget.technician.user.id_number}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-white/70">
                 Motivo del rechazo <span className="text-red-400">*</span>
               </label>
               <textarea
+                id="textarea-reject-reason"
                 ref={textareaRef}
                 value={rejectReason}
                 onChange={(e) => { setRejectReason(e.target.value); setRejectError(""); }}
                 rows={4}
-                placeholder="Describe por qué se rechaza este certificado…"
+                placeholder="Describe por qué se rechaza este documento…"
                 className="w-full bg-[#262f31] border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-[#8C7E97] transition"
               />
-              {rejectError && (
-                <p className="text-xs text-red-400">{rejectError}</p>
-              )}
+              {rejectError && <p className="text-xs text-red-400">{rejectError}</p>}
             </div>
 
             <div className="flex gap-3 pt-1">
               <button
+                id="btn-cancel-reject"
                 onClick={() => setRejectTarget(null)}
                 disabled={actionLoading}
                 className="flex-1 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm font-semibold transition disabled:opacity-40"
@@ -371,6 +667,7 @@ const CertificationReview = () => {
                 Cancelar
               </button>
               <button
+                id="btn-confirm-reject"
                 onClick={submitReject}
                 disabled={actionLoading}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition disabled:opacity-50"
