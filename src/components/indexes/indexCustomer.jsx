@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon, Search, SlidersHorizontal, XCircle } from "lucide-react";
+import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon, Search, SlidersHorizontal, XCircle, CheckCircle, X } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 import Swal from "sweetalert2";
@@ -115,7 +115,7 @@ const IndexCustomer = () => {
     }
   };
 
-  const handleDeleteCase = async (e, caseId) => {
+  const handleCancelCase = async (e, caseId) => {
     e.stopPropagation();
     const result = await Swal.fire({
       icon: "warning",
@@ -131,7 +131,7 @@ const IndexCustomer = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      await fetchData(`/client/cases/${caseId}`, { method: "DELETE" });
+      await fetchData(`/client/cases/${caseId}/cancel`, { method: "PATCH" });
       await Swal.fire({
         icon: "success",
         title: "Caso cancelado",
@@ -313,7 +313,7 @@ const IndexCustomer = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        {serviceCase.status === 'pending' && (
+                        {serviceCase.status === 'pending' && (!serviceCase.responses || serviceCase.responses.length === 0) && (
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
                             className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
@@ -325,19 +325,19 @@ const IndexCustomer = () => {
                         {serviceCase.status === 'active' && (
                           <button
                             onClick={(e) => handleResolveCase(e, serviceCase.id)}
-                            className="p-2 text-red-400 hover:text-red-300 transition-colors hover:bg-red-500/10 rounded-lg"
+                            className="p-2 text-emerald-400 hover:text-emerald-300 transition-colors hover:bg-emerald-500/10 rounded-lg"
                             title="Terminar caso"
                           >
-                            <XCircle size={18} />
+                            <CheckCircle size={18} />
                           </button>
                         )}
                         {(['active', 'pending', 'responded'].includes(serviceCase.status)) && (
                           <button
-                            onClick={(e) => handleDeleteCase(e, serviceCase.id)}
+                            onClick={(e) => handleCancelCase(e, serviceCase.id)}
                             className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg"
-                            title="Cancelar/Eliminar Caso"
+                            title="Cancelar Caso"
                           >
-                            <Trash2 size={18} />
+                            <X size={18} />
                           </button>
                         )}
                       </div>

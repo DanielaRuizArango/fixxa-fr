@@ -833,7 +833,7 @@ const CaseDetail = () => {
                                         <X size={18} />
                                       </button>
                                   )}
-                                  {isAccepted && (
+                                  {isAccepted && status !== 'cancelled' && (
                                     <button
                                       onClick={() => handleStartChat(techId)}
                                       className="flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-xl text-white text-[11px] font-bold hover:bg-[#a493bd] transition shadow-lg shadow-black/20 uppercase tracking-widest"
