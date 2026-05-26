@@ -115,6 +115,47 @@ const IndexCustomer = () => {
     }
   };
 
+  const handleDeleteCase = async (e, caseId) => {
+    e.stopPropagation();
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Cancelar Caso",
+      text: "¿Estás seguro de que deseas cancelar este caso? Esta acción no se puede deshacer.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, mantener",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await fetchData(`/client/cases/${caseId}`, { method: "DELETE" });
+      await Swal.fire({
+        icon: "success",
+        title: "Caso cancelado",
+        text: "El caso ha sido cancelado exitosamente.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      loadCases(1); // recargar desde la primera página
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "No se pudo cancelar el caso.",
+        background: "#1C2526",
+        color: "#fff",
+        confirmButtonColor: "#8C7E97",
+      });
+    }
+  };
+
   return (
     <MainLayout roleName={localStorage.getItem('userName') || userName} profileRoute="/customerProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
@@ -272,7 +313,7 @@ const IndexCustomer = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        {(serviceCase.status === 'active' || serviceCase.status === 'pending') && (
+                        {serviceCase.status === 'pending' && (
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
                             className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
@@ -281,7 +322,7 @@ const IndexCustomer = () => {
                             <Pencil size={18} />
                           </button>
                         )}
-                        {(serviceCase.status === 'active' || serviceCase.status === 'pending') && (
+                        {serviceCase.status === 'active' && (
                           <button
                             onClick={(e) => handleResolveCase(e, serviceCase.id)}
                             className="p-2 text-red-400 hover:text-red-300 transition-colors hover:bg-red-500/10 rounded-lg"
@@ -290,11 +331,11 @@ const IndexCustomer = () => {
                             <XCircle size={18} />
                           </button>
                         )}
-                        {(serviceCase.status === 'active' || serviceCase.status === 'pending') && (
+                        {(['active', 'pending', 'responded'].includes(serviceCase.status)) && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); /* delete logic */ }}
+                            onClick={(e) => handleDeleteCase(e, serviceCase.id)}
                             className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg"
-                            title="Eliminar"
+                            title="Cancelar/Eliminar Caso"
                           >
                             <Trash2 size={18} />
                           </button>
