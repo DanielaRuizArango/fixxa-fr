@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
-import { MessageSquare } from "lucide-react";
+import { fetchData, getProfileImageUrl, getChatOtherParticipant, getChatParticipantUser } from "../../api";
+import { MessageSquare, User } from "lucide-react";
 
 const ChatList = () => {
   const [conversations, setConversations] = useState([]);
@@ -48,7 +48,10 @@ const ChatList = () => {
           <div className="grid gap-4">
             {conversations.map((conv) => {
               const lastMessage = conv.messages?.[0];
-              const otherUser = role === "client" ? conv.technician?.user : conv.client?.user;
+              const participant = getChatOtherParticipant(conv, role);
+              const otherUser = getChatParticipantUser(participant);
+              const otherUserImage = getProfileImageUrl(participant) || getProfileImageUrl(otherUser);
+              const isChatClosed = ["resolved", "cancelled"].includes(conv.service_case?.status);
               
               return (
                 <div
@@ -56,12 +59,16 @@ const ChatList = () => {
                   onClick={() => navigate(`/chat/${conv.id}`)}
                   className="bg-[#2f343b] p-5 rounded-2xl border border-white/10 hover:border-[#8C7E97]/50 transition cursor-pointer flex items-center gap-4 group"
                 >
-                  <div className="w-12 h-12 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] font-bold text-xl uppercase">
-                    {otherUser?.name?.[0] || 'U'}
+                  <div className="w-12 h-12 rounded-full bg-[#8C7E97]/20 overflow-hidden flex items-center justify-center text-[#8C7E97] font-bold text-xl uppercase flex-shrink-0 border border-[#8C7E97]/30">
+                    {otherUserImage ? (
+                      <img src={otherUserImage} alt={otherUser?.name || 'Usuario'} className="w-full h-full object-cover" />
+                    ) : (
+                      otherUser?.name?.[0] || <User size={20} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <h3 className="font-bold text-white group-hover:text-[#8C7E97] transition">{otherUser?.name || 'Usuario'}</h3>
+                      <h3 className="font-bold text-white group-hover:text-[#8C7E97] transition">{otherUser?.name || participant?.name || 'Usuario'}</h3>
                       <span className="text-[10px] text-gray-500">
                         {lastMessage ? new Date(lastMessage.created_at).toLocaleDateString() : ''}
                       </span>
@@ -71,6 +78,7 @@ const ChatList = () => {
                     </p>
                     <div className="mt-2 inline-block px-2 py-0.5 rounded-lg bg-[#1c2526] text-[10px] text-gray-500 border border-white/5">
                       FTS-{conv.service_case_id} · {conv.service_case?.title}
+                      {isChatClosed && <span className="ml-1 text-red-400">· Cerrado</span>}
                     </div>
                   </div>
                 </div>

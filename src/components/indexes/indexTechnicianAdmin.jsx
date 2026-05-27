@@ -14,7 +14,7 @@ import {
   Eye
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getProfileImageUrl } from "../../api";
 
 const IndexTechnicianAdmin = () => {
   const navigate = useNavigate();
@@ -122,8 +122,8 @@ const IndexTechnicianAdmin = () => {
               <div key={tech.id} className="bg-[#262f31]/80 border border-white/5 rounded-2xl p-5 flex flex-col justify-between transition-all hover:bg-[#262f31] shadow-md">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1C2526] flex items-center justify-center border border-[#8C7E97]/30 flex-shrink-0">
-                    {tech.image ? (
-                      <img src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${tech.image}`} className="w-full h-full object-cover" alt="" />
+                    {getProfileImageUrl(tech) ? (
+                      <img src={getProfileImageUrl(tech)} className="w-full h-full object-cover" alt="" />
                     ) : (
                       <Briefcase size={24} className="text-[#8C7E97]" />
                     )}

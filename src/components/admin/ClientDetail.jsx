@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getProfileImageUrl } from "../../api";
 
 const ClientDetail = () => {
   const { id } = useParams();
@@ -84,9 +84,9 @@ const ClientDetail = () => {
           <div className="lg:col-span-1 flex flex-col gap-6">
             <div className="bg-[#262f31] border border-white/5 rounded-3xl p-8 shadow-xl flex flex-col items-center text-center">
               <div className="w-32 h-32 rounded-3xl overflow-hidden mb-6 border-4 border-[#8C7E97]/20 shadow-2xl">
-                {client.image ? (
+                {getProfileImageUrl(client) ? (
                   <img 
-                    src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${client.image}`} 
+                    src={getProfileImageUrl(client)} 
                     className="w-full h-full object-cover" 
                     alt={client.name} 
                   />

@@ -2,18 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search,
-  Eye,
   Calendar,
-  User,
-  Clock,
   AlertCircle,
   FileText,
   MessageSquare,
   DollarSign,
-  X
+  Image as ImageIcon
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getProfileImageUrl, getCaseImageUrl, enrichCasesWithImages } from "../../api";
 import SystemAlerts from "../admin/SystemAlerts";
 import Swal from "sweetalert2";
 
@@ -50,7 +47,8 @@ const IndexCasesAdmin = () => {
       queryParams.append('page', page);
 
       const response = await fetchData(`/admin/cases?${queryParams.toString()}`);
-      const newData = response.data?.data || response.data || [];
+      const rawData = response.data?.data || response.data || [];
+      const newData = await enrichCasesWithImages(rawData);
       
       if (append) {
         setCases(prev => [...prev, ...newData]);
@@ -249,12 +247,33 @@ const IndexCasesAdmin = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cases.map((caseItem) => (
+            {cases.map((caseItem) => {
+              const caseImageUrl = getCaseImageUrl(caseItem);
+              const clientName = caseItem.client?.user?.name || caseItem.client?.name || 'Cliente';
+              const clientImageUrl = getProfileImageUrl(caseItem.client) || getProfileImageUrl(caseItem.client?.user);
+              const responsesCount = caseItem.responses?.length || caseItem.responses_count || 0;
+
+              return (
               <div 
                 key={caseItem.id}
                 onClick={() => navigate(`/case-detail/${caseItem.id}`)}
-                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl p-5 flex flex-col transition-all shadow-md group cursor-pointer border-b-4 border-b-transparent hover:border-b-[#8C7E97] relative overflow-hidden"
+                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl overflow-hidden flex flex-col transition-all shadow-md group cursor-pointer border-b-4 border-b-transparent hover:border-b-[#8C7E97] relative"
               >
+                <div className="w-full h-36 bg-[#1c2526] relative overflow-hidden flex-shrink-0">
+                  {caseImageUrl ? (
+                    <img
+                      src={caseImageUrl}
+                      alt={caseItem.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-700">
+                      <ImageIcon size={28} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-5 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-3">
                   {getStatusBadge(caseItem.status)}
                   <div className="flex items-center gap-2">
@@ -285,11 +304,15 @@ const IndexCasesAdmin = () => {
                 <div className="space-y-2 pt-4 border-t border-white/5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-gray-300">
-                      <div className="w-6 h-6 rounded-full bg-[#1C2526] flex items-center justify-center text-[10px] text-[#8C7E97] border border-white/5">
-                        {caseItem.client?.user?.name.charAt(0)}
+                      <div className="w-6 h-6 rounded-full bg-[#1C2526] overflow-hidden flex items-center justify-center text-[10px] text-[#8C7E97] border border-white/5 flex-shrink-0">
+                        {clientImageUrl ? (
+                          <img src={clientImageUrl} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          clientName.charAt(0) || '?'
+                        )}
                       </div>
                       <div className="flex flex-col">
-                        <span className="truncate max-w-[120px]">{caseItem.client?.user?.name}</span>
+                        <span className="truncate max-w-[120px]">{clientName}</span>
                         {caseItem.city && (
                           <span className="text-[9px] text-gray-500 font-medium">{caseItem.city}</span>
                         )}
@@ -299,7 +322,7 @@ const IndexCasesAdmin = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-gray-500" title="Respuestas">
                         <MessageSquare size={12} />
-                        <span className="text-[10px] font-bold">{caseItem.responses?.length || 0}</span>
+                        <span className="text-[10px] font-bold">{responsesCount}</span>
                       </div>
                     </div>
                   </div>
@@ -316,8 +339,9 @@ const IndexCasesAdmin = () => {
                     </span>
                   </div>
                 )}
+                </div>
               </div>
-            ))}
+            );})}
             {hasMore && (
               <div className="flex justify-center mt-8 w-full col-span-full">
                 <button 

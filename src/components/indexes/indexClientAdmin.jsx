@@ -14,7 +14,7 @@ import {
   Eye
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
+import { fetchData, getProfileImageUrl } from "../../api";
 
 const IndexClientAdmin = () => {
   const navigate = useNavigate();
@@ -137,8 +137,8 @@ const IndexClientAdmin = () => {
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#262f31] flex items-center justify-center border border-[#8C7E97]/20 flex-shrink-0 group-hover:border-[#8C7E97]/50 transition-colors">
-                        {client.image ? (
-                          <img src={`${import.meta.env.VITE_API_STORAGE_URL || ''}/${client.image}`} className="w-full h-full object-cover" alt="" />
+                        {getProfileImageUrl(client) ? (
+                          <img src={getProfileImageUrl(client)} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <Users size={32} className="text-[#8C7E97]/50" />
                         )}

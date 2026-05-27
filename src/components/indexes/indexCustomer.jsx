@@ -115,6 +115,52 @@ const IndexCustomer = () => {
     }
   };
 
+  const canEditCase = (serviceCase) => {
+    if (serviceCase.status === 'active') return true;
+    return serviceCase.status === 'pending' && (!serviceCase.responses || serviceCase.responses.length === 0);
+  };
+
+  const handleDeleteCase = async (e, caseId) => {
+    e.stopPropagation();
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "Eliminar Caso",
+      text: "¿Estás seguro de que deseas eliminar este caso? Esta acción no se puede deshacer.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "No, mantener",
+      background: "#1C2526",
+      color: "#ffffff",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#4C5462",
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await fetchData(`/client/cases/${caseId}`, { method: "DELETE" });
+      await Swal.fire({
+        icon: "success",
+        title: "Caso eliminado",
+        text: "El caso ha sido eliminado exitosamente.",
+        background: "#1C2526",
+        color: "#ffffff",
+        confirmButtonColor: "#8C7E97",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      loadCases(1);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "No se pudo eliminar el caso.",
+        background: "#1C2526",
+        color: "#fff",
+        confirmButtonColor: "#8C7E97",
+      });
+    }
+  };
+
   const handleCancelCase = async (e, caseId) => {
     e.stopPropagation();
     const result = await Swal.fire({
@@ -313,13 +359,22 @@ const IndexCustomer = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        {serviceCase.status === 'pending' && (!serviceCase.responses || serviceCase.responses.length === 0) && (
+                        {canEditCase(serviceCase) && (
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/editCase/${serviceCase.id}`); }}
                             className="p-2 text-gray-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
                             title="Editar"
                           >
                             <Pencil size={18} />
+                          </button>
+                        )}
+                        {serviceCase.status === 'active' && !serviceCase.accepted_technician_id && (
+                          <button
+                            onClick={(e) => handleDeleteCase(e, serviceCase.id)}
+                            className="p-2 text-gray-400 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={18} />
                           </button>
                         )}
                         {serviceCase.status === 'active' && (

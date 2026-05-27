@@ -19,7 +19,7 @@ import {
   X
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData, getStorageUrl } from "../../api";
+import { fetchData, getStorageUrl, getProfileImageUrl } from "../../api";
 
 const TechnicianDetail = () => {
   const { id } = useParams();
@@ -89,8 +89,8 @@ const TechnicianDetail = () => {
           <div className="lg:col-span-1 flex flex-col gap-6">
             <div className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col items-center text-center">
               <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border-4 border-[#8C7E97]/20">
-                {tech.user?.image ? (
-                  <img src={getStorageUrl(tech.user.image)} className="w-full h-full object-cover" alt="" />
+                {getProfileImageUrl(tech.user) || getProfileImageUrl(tech) ? (
+                  <img src={getProfileImageUrl(tech.user) || getProfileImageUrl(tech)} className="w-full h-full object-cover" alt="" />
                 ) : (
                   <div className="w-full h-full bg-[#1C2526] flex items-center justify-center text-[#8C7E97]">
                     <User size={48} />

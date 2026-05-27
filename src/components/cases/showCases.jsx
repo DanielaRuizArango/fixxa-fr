@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3, ChevronLeft, ChevronRight } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
-import { fetchData, getStorageUrl } from "../../api.js";
+import { fetchData, getStorageUrl, getProfileImageUrl, getCaseProposals } from "../../api.js";
 import Swal from "sweetalert2";
 
 const CaseDetail = () => {
@@ -159,8 +159,14 @@ const CaseDetail = () => {
           initial_message: initialMessage
         })
       });
+      const payload = response.data ?? response;
+      const chatId = payload.conversation_id
+        ?? payload.chat_id
+        ?? payload.conversation?.id
+        ?? payload.data?.conversation_id;
+
+      await loadCase();
       setSuccessMessage("Propuesta aceptada correctamente.");
-      setCaseData(response.data);
       Swal.fire({
         icon: "success",
         title: "¡Propuesta aceptada!",
@@ -173,14 +179,6 @@ const CaseDetail = () => {
         showConfirmButton: false,
       });
       // Buscar el ID del chat en múltiples lugares posibles de la respuesta
-      const chatId = response.data?.conversation_id || 
-                     response.data?.chat_id || 
-                     response.data?.conversation?.id || 
-                     response.data?.id || 
-                     response.conversation_id || 
-                     response.chat_id ||
-                     response.id;
-
       if (chatId) {
         // Redirigir al chat con el técnico después de aceptar
         setTimeout(() => {
@@ -373,6 +371,10 @@ const CaseDetail = () => {
     }
   };
 
+  const canChat = (caseStatus) => {
+    return !['resolved', 'cancelled'].includes(caseStatus);
+  };
+
   const handleStartChat = async (targetTechnicianId = null) => {
     setActionLoading(true);
     try {
@@ -393,7 +395,7 @@ const CaseDetail = () => {
   };
 
   const interestedTechnicians = [
-    ...(Array.isArray(caseData?.responses) ? caseData.responses.map(r => ({ ...r, isResponse: true })) : []),
+    ...getCaseProposals(caseData),
     ...(Array.isArray(caseData?.interested_technicians) ? caseData.interested_technicians : []),
     ...(Array.isArray(caseData?.interestedTechnicians) ? caseData.interestedTechnicians : []),
     ...(Array.isArray(caseData?.interested) ? caseData.interested : []),
@@ -650,7 +652,7 @@ const CaseDetail = () => {
 
                     <div className="mt-6 space-y-3">
                       {/* Botón para iniciar conversación, solo si es el técnico aceptado */}
-                      {caseData?.accepted_technician_id === myTechnicianId && (
+                      {caseData?.accepted_technician_id === myTechnicianId && canChat(status) && (
                         <button
                           onClick={() => handleStartChat()}
                           className="w-full rounded-2xl bg-green-600 hover:bg-green-500 active:scale-95 px-5 py-3 text-sm font-bold text-white shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wider"
@@ -757,6 +759,7 @@ const CaseDetail = () => {
                         const isProposal = tech.isResponse;
                         const techId = tech?.technician_id || tech?.id;
                         const techName = tech?.technician?.user?.name || tech?.name || tech?.full_name || tech?.user?.name || `Técnico #${index + 1}`;
+                        const techImage = getProfileImageUrl(tech?.technician) || getProfileImageUrl(tech?.technician?.user) || getProfileImageUrl(tech?.user) || getProfileImageUrl(tech);
                         const techEmail = tech?.technician?.user?.email || tech?.email || tech?.user?.email || "Sin correo";
                         const isAccepted = caseData?.accepted_technician_id === techId;
 
@@ -771,9 +774,13 @@ const CaseDetail = () => {
                                   <div className="relative">
                                     <div 
                                       onClick={() => navigate(`/technician-profile/${techId}`)}
-                                      className="w-10 h-10 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[#8C7E97] shrink-0 cursor-pointer hover:bg-[#8C7E97]/30 transition-colors"
+                                      className="w-10 h-10 rounded-full bg-[#8C7E97]/20 overflow-hidden flex items-center justify-center text-[#8C7E97] shrink-0 cursor-pointer hover:bg-[#8C7E97]/30 transition-colors border border-[#8C7E97]/30"
                                     >
-                                      <User size={20} />
+                                      {techImage ? (
+                                        <img src={techImage} alt={techName} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <User size={20} />
+                                      )}
                                     </div>
                                     <span 
                                       className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-[#1c2526] ${
@@ -892,7 +899,7 @@ const CaseDetail = () => {
                                         <X size={18} />
                                       </button>
                                   )}
-                                  {isAccepted && status !== 'cancelled' && (
+                                  {isAccepted && canChat(status) && (
                                     <button
                                       onClick={() => handleStartChat(techId)}
                                       className="flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-xl text-white text-[11px] font-bold hover:bg-[#a493bd] transition shadow-lg shadow-black/20 uppercase tracking-widest"

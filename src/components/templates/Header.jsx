@@ -2,7 +2,7 @@ import { User, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 import { useState, useEffect } from "react";
-import { fetchData } from "../../api";
+import { fetchData, getStorageUrl } from "../../api";
 
 const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) =
         const res = await fetchData(endpoint);
         const userData = res.data?.user || res.data || res.user || res;
         if (userData?.image) {
-          setProfileImage(userData.image);
+          setProfileImage(getStorageUrl(userData.image));
         }
       } catch (err) {
         console.error("Error fetching profile image", err);

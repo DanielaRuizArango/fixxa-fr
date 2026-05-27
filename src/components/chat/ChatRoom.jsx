@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../templates/MainLayout";
-import { fetchData } from "../../api";
-import { Send, ArrowLeft, XCircle, Eye } from "lucide-react";
+import { fetchData, getProfileImageUrl, getChatOtherParticipant, getChatParticipantUser, getAcceptedProposal } from "../../api";
+import { Send, ArrowLeft, XCircle, Eye, User, Lock } from "lucide-react";
 import Swal from "sweetalert2";
 
 const ChatRoom = () => {
@@ -77,6 +77,13 @@ const ChatRoom = () => {
       try {
         const response = await fetchData(`/chat/${id}`);
         const newMessages = response.data?.messages || response.messages || [];
+        const convData = response.data?.conversation || response.conversation;
+        if (convData) {
+          setConversation(convData);
+          if (convData.service_case?.status) {
+            setCaseStatus(convData.service_case.status);
+          }
+        }
         setMessages(prev => {
           // Solo actualizar si realmente hay mensajes nuevos
           if (
@@ -161,7 +168,7 @@ const ChatRoom = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    if (!newMessage.trim() || sending || isChatClosed) return;
 
     try {
       setSending(true);
@@ -202,8 +209,16 @@ const ChatRoom = () => {
     );
   }
 
-  const otherUser = role === "client" ? conversation?.technician?.user : conversation?.client?.user;
-  const otherUserName = otherUser?.name || conversation?.technician?.user?.name || conversation?.client?.user?.name || "Chat";
+  const participant = getChatOtherParticipant(conversation, role);
+  const otherUser = getChatParticipantUser(participant);
+  const otherUserName = otherUser?.name
+    || participant?.name
+    || conversation?.technician?.user?.name
+    || conversation?.client?.user?.name
+    || "Chat";
+  const otherUserImage = getProfileImageUrl(participant) || getProfileImageUrl(otherUser);
+  const acceptedProposal = getAcceptedProposal(conversation);
+  const isChatClosed = caseStatus === "resolved" || caseStatus === "cancelled";
 
   return (
     <MainLayout roleName={userName}>
@@ -213,9 +228,16 @@ const ChatRoom = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full transition">
             <ArrowLeft size={20} />
           </button>
-          <div className="flex flex-col flex-1">
-            <span className="font-bold text-lg">{otherUserName}</span>
-            <span className="text-xs text-white/70">{conversation?.service_case?.title}</span>
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center flex-shrink-0 border border-white/30">
+            {otherUserImage ? (
+              <img src={otherUserImage} alt={otherUserName} className="w-full h-full object-cover" />
+            ) : (
+              <User size={20} className="text-white/80" />
+            )}
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="font-bold text-lg truncate">{otherUserName}</span>
+            <span className="text-xs text-white/70 truncate">{conversation?.service_case?.title}</span>
           </div>
           {/* Botón Ver Caso visible para ambos */}
           {conversation?.service_case?.id && (
@@ -241,6 +263,23 @@ const ChatRoom = () => {
             </button>
           )}
         </div>
+
+        {/* Propuesta aceptada */}
+        {acceptedProposal && (
+          <div className="mx-6 mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 mb-2">
+              Propuesta aceptada
+            </p>
+            {acceptedProposal.estimated_cost != null && (
+              <p className="text-sm font-bold text-white">
+                Costo: ${parseInt(acceptedProposal.estimated_cost).toLocaleString()}
+              </p>
+            )}
+            {acceptedProposal.questions && (
+              <p className="text-xs text-gray-300 mt-2 italic">"{acceptedProposal.questions}"</p>
+            )}
+          </div>
+        )}
 
         {/* Mensajes */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
@@ -273,22 +312,33 @@ const ChatRoom = () => {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSendMessage} className="p-4 bg-[#1c2526] border-t border-white/10 flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 bg-[#2f343b] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-[#8C7E97] transition"
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
-            className="bg-[#8C7E97] p-2 rounded-xl text-white hover:bg-[#a493bd] disabled:opacity-50 transition"
-          >
-            <Send size={20} />
-          </button>
-        </form>
+        {isChatClosed ? (
+          <div className="p-4 bg-[#1c2526] border-t border-white/10 flex items-center justify-center gap-2 text-gray-400 text-sm">
+            <Lock size={16} />
+            <span>
+              {caseStatus === "resolved"
+                ? "Este caso ha sido finalizado. No puedes enviar más mensajes."
+                : "Este caso fue cancelado. El chat está cerrado."}
+            </span>
+          </div>
+        ) : (
+          <form onSubmit={handleSendMessage} className="p-4 bg-[#1c2526] border-t border-white/10 flex gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-[#2f343b] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-[#8C7E97] transition"
+            />
+            <button
+              type="submit"
+              disabled={!newMessage.trim() || sending}
+              className="bg-[#8C7E97] p-2 rounded-xl text-white hover:bg-[#a493bd] disabled:opacity-50 transition"
+            >
+              <Send size={20} />
+            </button>
+          </form>
+        )}
       </div>
     </MainLayout>
   );

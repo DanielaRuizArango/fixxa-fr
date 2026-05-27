@@ -353,7 +353,7 @@ const MyProposals = () => {
                     </button>
 
                     {/* Botón Chat: Solo si está aceptado o el caso está en progreso */}
-                    {isAccepted && serviceCase.status === 'pending' && (
+                    {isAccepted && !['resolved', 'cancelled'].includes(serviceCase.status) && (
                       <button
                         onClick={() => handleContactClient(serviceCase.id)}
                         className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-green-500/10 hover:bg-green-500/25 text-green-300 text-xs font-bold px-4 py-2.5 rounded-xl border border-green-500/20 transition-all active:scale-95 whitespace-nowrap"
