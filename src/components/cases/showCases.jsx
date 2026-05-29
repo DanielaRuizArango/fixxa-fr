@@ -160,7 +160,8 @@ const CaseDetail = () => {
         })
       });
       const payload = response.data ?? response;
-      const chatId = payload.conversation_id
+      const chatId = response.conversation_id
+        ?? payload.conversation_id
         ?? payload.chat_id
         ?? payload.conversation?.id
         ?? payload.data?.conversation_id;
@@ -439,7 +440,7 @@ const CaseDetail = () => {
             </button>
             <h1 className="text-3xl font-bold mt-4">Detalle del Caso</h1>
             <p className="text-sm text-gray-300 mt-2">
-              Número: {caseNumber} • {caseData?.client?.user?.city || location} • <span className={caseData?.service_type === 'remote' ? 'text-blue-400' : 'text-orange-400'}>{serviceType}</span>
+              Número: {caseNumber} • {location} • <span className={caseData?.service_type === 'remote' ? 'text-blue-400' : 'text-orange-400'}>{serviceType}</span>
             </p>
             {isAdmin && caseData?.client && (
               <button 

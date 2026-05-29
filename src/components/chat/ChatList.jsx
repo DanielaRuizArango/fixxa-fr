@@ -46,7 +46,13 @@ const ChatList = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {conversations.map((conv) => {
+            {[...conversations]
+              .sort((a, b) => {
+                const dateA = a.messages?.[0] ? new Date(a.messages[0].created_at).getTime() : new Date(a.created_at).getTime();
+                const dateB = b.messages?.[0] ? new Date(b.messages[0].created_at).getTime() : new Date(b.created_at).getTime();
+                return dateB - dateA;
+              })
+              .map((conv) => {
               const lastMessage = conv.messages?.[0];
               const participant = getChatOtherParticipant(conv, role);
               const otherUser = getChatParticipantUser(participant);
