@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, MessageSquare, FileText, X } from "lucide-react";
+import { Bell, MessageSquare, FileText, Loader2 } from "lucide-react";
 import { fetchData } from "../../api";
 
 const NotificationBell = () => {
@@ -17,6 +17,7 @@ const NotificationBell = () => {
     const checkNotifications = async () => {
         if (!role || isNaN(userId)) return;
         
+        setLoading(true);
         try {
             let newNotifications = [];
             
@@ -79,6 +80,8 @@ const NotificationBell = () => {
             setUnreadCount(newNotifications.length);
         } catch (err) {
             console.error("Error al obtener notificaciones:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -155,7 +158,11 @@ const NotificationBell = () => {
                 className="relative p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all duration-300"
                 aria-label="Notificaciones"
             >
-                <Bell size={24} />
+                {loading ? (
+                    <Loader2 size={24} className="animate-spin text-[#8C7E97]" />
+                ) : (
+                    <Bell size={24} />
+                )}
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-[#8C7E97] animate-pulse">
                         {unreadCount > 9 ? '+9' : unreadCount}
@@ -167,7 +174,10 @@ const NotificationBell = () => {
             {isOpen && (
                 <div className="absolute right-0 mt-3 w-80 bg-[#1c2526] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="p-4 bg-[#262f31] border-b border-white/10 flex justify-between items-center">
-                        <h3 className="font-bold text-sm uppercase tracking-widest text-[#8C7E97]">Notificaciones</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-sm uppercase tracking-widest text-[#8C7E97]">Notificaciones</h3>
+                            {loading && <Loader2 size={14} className="animate-spin text-[#8C7E97]" />}
+                        </div>
                         {unreadCount > 0 && (
                             <button 
                                 onClick={markAllAsRead}

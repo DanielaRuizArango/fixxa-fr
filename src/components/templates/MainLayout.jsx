@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { fetchData } from "../../api";
 import Swal from "sweetalert2";
 import Header from "./Header";
@@ -17,6 +17,7 @@ import Footer from "./Footer";
  */
 const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Corrección: usar useEffect (no useState) para ejecutar el fetch al montar.
@@ -36,6 +37,10 @@ const MainLayout = ({ roleName, profileRoute, navItems = [], children }) => {
       }).catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const role = localStorage.getItem('role');
   const isAdmin = ['super_admin', 'admin', 'moderator'].includes(role);

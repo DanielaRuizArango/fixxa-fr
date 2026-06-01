@@ -13,7 +13,9 @@ const ChatRoom = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const role = localStorage.getItem("role");
   const userName = localStorage.getItem("userName") || "Usuario";
@@ -90,6 +92,12 @@ const ChatRoom = () => {
             newMessages.length !== prev.length ||
             (newMessages.length > 0 && newMessages[newMessages.length - 1].id !== prev[prev.length - 1]?.id)
           ) {
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage && lastMessage.sender_id !== userId && prev.length > 0) {
+              setIsOtherTyping(true);
+              clearTimeout(typingTimeoutRef.current);
+              typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 1800);
+            }
             return newMessages;
           }
           return prev;
@@ -112,9 +120,10 @@ const ChatRoom = () => {
 
     return () => {
       clearInterval(intervalId);
+      clearTimeout(typingTimeoutRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [id, loadChat]);
+  }, [id, loadChat, userId]);
 
   useEffect(scrollToBottom, [messages]);
 
@@ -307,6 +316,17 @@ const ChatRoom = () => {
                 </div>
               );
             })
+          )}
+          {isOtherTyping && (
+            <div className="flex justify-start">
+              <div className="bg-[#1c2526] border border-white/5 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+                <div className="flex items-center gap-1.5" aria-label={`${otherUserName} estÃ¡ escribiendo`}>
+                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.2s]" />
+                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.1s]" />
+                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
+                </div>
+              </div>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>

@@ -245,7 +245,7 @@ const CertificationReview = () => {
 
       {/* ── grid ── */}
       {!loading && !error && items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {items.map((item) => {
             const meta = STATUS_META[item.status] ?? STATUS_META.pending;
             const user = item.technician?.user ?? {};

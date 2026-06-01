@@ -105,7 +105,7 @@ const ForgotPassword = () => {
         </h2>
 
         {message.text && (
-          <div className={`p-3 rounded-lg text-sm mb-4 ${
+          <div className={`p-3 rounded-xl text-sm mb-4 ${
             message.type === "success" ? "bg-green-500/20 text-green-300 border border-green-500/50" : "bg-red-500/20 text-red-300 border border-red-500/50"
           }`}>
             {message.text}
@@ -124,7 +124,7 @@ const ForgotPassword = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-full bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
+                className="w-full px-4 py-3 rounded-xl bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
                 placeholder="Ingresa tu correo electrónico"
                 required
                 disabled={isLoading}
@@ -139,7 +139,7 @@ const ForgotPassword = () => {
                   type="email"
                   value={email}
                   readOnly
-                  className="w-full px-4 py-3 rounded-full bg-[#353c48] text-gray-300 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#353c48] text-gray-300 focus:outline-none"
                 />
               </div>
               <div>
@@ -151,7 +151,7 @@ const ForgotPassword = () => {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-full bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
+                  className="w-full px-4 py-3 rounded-xl bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
                   placeholder="********"
                   required
                   disabled={isLoading}
@@ -167,7 +167,7 @@ const ForgotPassword = () => {
                   id="passwordConfirmation"
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
-                  className="w-full px-4 py-3 rounded-full bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
+                  className="w-full px-4 py-3 rounded-xl bg-[#4C5462] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C7E97]"
                   placeholder="********"
                   required
                   disabled={isLoading}
@@ -180,7 +180,7 @@ const ForgotPassword = () => {
           {/* Botón de enviar */}
           <button
             type="submit"
-            className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-2 hover:opacity-80 transition duration-300 flex items-center justify-center gap-2"
+            className="bg-[#8C7E97] py-3 rounded-xl text-white text-lg mt-2 hover:opacity-80 transition duration-300 flex items-center justify-center gap-2"
             disabled={isLoading}
           >
             {isLoading ? (

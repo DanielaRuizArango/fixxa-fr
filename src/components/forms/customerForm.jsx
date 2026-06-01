@@ -76,7 +76,7 @@ const CustomerForm = () => {
           value={formData.name}
           onChange={handleInputChange}
           placeholder="Tu nombre completo"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.name ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.name ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.name && <p className="text-red-500 text-xs">{errors.name[0]}</p>}
 
@@ -88,7 +88,7 @@ const CustomerForm = () => {
           value={formData.email}
           onChange={handleInputChange}
           placeholder="correo@ejemplo.com"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.email ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.email ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.email && <p className="text-red-500 text-xs">{errors.email[0]}</p>}
 
@@ -100,7 +100,7 @@ const CustomerForm = () => {
           value={formData.password}
           onChange={handleInputChange}
           placeholder="Tu contraseña"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.password ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.password ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.password && <p className="text-red-500 text-xs">{errors.password[0]}</p>}
 
@@ -112,7 +112,7 @@ const CustomerForm = () => {
           value={formData.phone}
           onChange={handleInputChange}
           placeholder="+123 456 7890"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.phone ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.phone ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.phone && <p className="text-red-500 text-xs">{errors.phone[0]}</p>}
 
@@ -124,7 +124,7 @@ const CustomerForm = () => {
           value={formData.city}
           onChange={handleInputChange}
           placeholder="Ciudad donde resides"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.city ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.city ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.city && <p className="text-red-500 text-xs">{errors.city[0]}</p>}
 
@@ -136,7 +136,7 @@ const CustomerForm = () => {
           value={formData.address}
           onChange={handleInputChange}
           placeholder="Tu dirección"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.address ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.address ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.address && <p className="text-red-500 text-xs">{errors.address[0]}</p>}
 
@@ -146,7 +146,7 @@ const CustomerForm = () => {
           name="type_id"
           value={formData.type_id}
           onChange={handleInputChange}
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.type_id ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.type_id ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         >
           <option value="" disabled>Selecciona un tipo</option>
           <option value="cedula">Cédula</option>
@@ -163,7 +163,7 @@ const CustomerForm = () => {
           value={formData.id_number}
           onChange={handleInputChange}
           placeholder="Número de documento"
-          className={`bg-[#4C5462] rounded-lg p-3 text-white outline-none focus:ring-2 ${errors.id_number ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.id_number ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.id_number && <p className="text-red-500 text-xs">{errors.id_number[0]}</p>}
 
@@ -173,7 +173,7 @@ const CustomerForm = () => {
           type="file"
           accept="image/*"
           onChange={handleFileChange}
-          className={`bg-[#4C5462] rounded-lg p-1 text-white outline-none focus:ring-2 ${errors.image ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={`bg-[#4C5462] rounded-xl p-1 text-white outline-none focus:ring-2 ${errors.image ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
         />
         {errors.image && <p className="text-red-500 text-xs">{errors.image[0]}</p>}
 

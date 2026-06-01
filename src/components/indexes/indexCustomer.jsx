@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon, Search, SlidersHorizontal, XCircle, CheckCircle, X } from "lucide-react";
+import { Pencil, Trash2, Plus, MessageSquare, Clock, AlertCircle, Eye, Image as ImageIcon, Search, CheckCircle, X } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 import Swal from "sweetalert2";
@@ -202,6 +202,30 @@ const IndexCustomer = () => {
     }
   };
 
+  const kanbanColumns = [
+    {
+      title: "Activos",
+      description: "Casos abiertos o pendientes",
+      statuses: ["active", "pending"],
+      accent: "border-green-500/30 bg-green-500/10 text-green-300",
+    },
+    {
+      title: "Respondidos",
+      description: "Casos con propuestas",
+      statuses: ["responded"],
+      accent: "border-[#8C7E97]/40 bg-[#8C7E97]/15 text-[#d9cbe5]",
+    },
+    {
+      title: "Resueltos",
+      description: "Finalizados o cerrados",
+      statuses: ["resolved", "closed", "cancelled"],
+      accent: "border-slate-400/20 bg-slate-400/10 text-slate-300",
+    },
+  ].map((column) => ({
+    ...column,
+    cases: cases.filter((serviceCase) => column.statuses.includes(serviceCase.status)),
+  }));
+
   return (
     <MainLayout roleName={localStorage.getItem('userName') || userName} profileRoute="/customerProfile">
       <div className="flex flex-col gap-6 pt-4 pb-20">
@@ -271,9 +295,25 @@ const IndexCustomer = () => {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center pt-20">
-            <div className="w-10 h-10 border-4 border-[#8C7E97] border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-400">Obteniendo tus casos...</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {[0, 1, 2].map((column) => (
+              <div key={column} className="bg-[#262f31]/60 border border-white/5 rounded-2xl p-4">
+                <div className="h-5 w-28 rounded-lg bg-white/10 animate-pulse mb-4" />
+                <div className="space-y-4">
+                  {[0, 1].map((item) => (
+                    <div key={item} className="rounded-2xl border border-white/5 bg-[#1c2526]/70 overflow-hidden">
+                      <div className="h-32 bg-white/10 animate-pulse" />
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 w-24 rounded bg-white/10 animate-pulse" />
+                        <div className="h-5 w-3/4 rounded bg-white/10 animate-pulse" />
+                        <div className="h-3 w-full rounded bg-white/10 animate-pulse" />
+                        <div className="h-3 w-2/3 rounded bg-white/10 animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="bg-red-500/10 border border-red-500/50 p-6 rounded-2xl text-center">
@@ -297,15 +337,33 @@ const IndexCustomer = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {cases.map((serviceCase) => (
-              <div
-                key={serviceCase.id}
-                onClick={() => navigate(`/case-detail/${serviceCase.id}`)}
-                className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl overflow-hidden flex flex-col md:flex-row transition-all shadow-md group cursor-pointer"
-              >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {kanbanColumns.map((column) => (
+              <section key={column.title} className="bg-[#1c2526]/45 border border-white/5 rounded-2xl p-4 min-h-[280px]">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold">{column.title}</h2>
+                    <p className="text-xs text-gray-500">{column.description}</p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-xl border text-xs font-bold ${column.accent}`}>
+                    {column.cases.length}
+                  </span>
+                </div>
+
+                {column.cases.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-gray-500">
+                    Sin casos en este estado
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {column.cases.map((serviceCase) => (
+                      <div
+                        key={serviceCase.id}
+                        onClick={() => navigate(`/case-detail/${serviceCase.id}`)}
+                        className="bg-[#262f31]/80 hover:bg-[#262f31] border border-white/5 rounded-2xl overflow-hidden flex flex-col transition-all shadow-md group cursor-pointer"
+                      >
                 {/* Imagen del caso */}
-                <div className="w-full md:w-32 lg:w-48 h-48 md:h-auto bg-[#1c2526] relative overflow-hidden flex-shrink-0">
+                <div className="w-full h-40 bg-[#1c2526] relative overflow-hidden flex-shrink-0">
                   {serviceCase.images && serviceCase.images.length > 0 ? (
                     <img
                       src={getStorageUrl(serviceCase.images[0].image_path)}
@@ -319,9 +377,9 @@ const IndexCustomer = () => {
                   )}
                 </div>
 
-                <div className="flex-1 p-6 flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="flex-1 p-5 flex flex-col justify-between items-start gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(serviceCase.status)}`}>
                         {serviceCase.status.toUpperCase()}
                       </span>
@@ -347,9 +405,9 @@ const IndexCustomer = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4 items-end self-stretch md:self-center">
-                    <div className="flex flex-row md:flex-col gap-3 justify-end items-center md:items-end w-full md:w-auto">
-                      <p className="text-xs font-mono text-gray-500 hidden md:block">FTS-{serviceCase.id.toString().padStart(6, '0')}</p>
+                  <div className="flex flex-col gap-4 items-end self-stretch">
+                    <div className="flex flex-row gap-3 justify-between items-center w-full">
+                      <p className="text-xs font-mono text-gray-500">FTS-{serviceCase.id.toString().padStart(6, '0')}</p>
 
                       <div className="flex gap-2">
                         <button
@@ -398,18 +456,16 @@ const IndexCustomer = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => navigate(`/case-detail/${serviceCase.id}`)}
-                      className="flex md:hidden items-center gap-2 px-4 py-2 bg-[#8C7E97] text-white rounded-xl text-xs font-bold"
-                    >
-                      Ver Detalles
-                    </button>
                   </div>
                 </div>
-              </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             ))}
             {hasMore && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-4 lg:col-span-3">
                 <button
                   onClick={() => loadCases(currentPage + 1, true)}
                   className="px-8 py-3 bg-[#8C7E97] hover:bg-[#8C7E97]/80 text-white rounded-2xl font-bold transition-all shadow-lg shadow-[#8C7E97]/20 active:scale-95"

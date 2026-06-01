@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award } from "lucide-react";
+import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 
@@ -136,11 +136,6 @@ const TechnicianProfile = () => {
             >
               <Pencil size={18} />
               Editar
-            </button>
-
-            <button className="flex items-center gap-2 bg-red-500/80 px-6 py-2 rounded-lg hover:bg-red-600 transition shadow-md">
-              <Trash2 size={18} />
-              Eliminar
             </button>
 
           </div>

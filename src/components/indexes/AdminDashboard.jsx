@@ -15,6 +15,15 @@ import {
 import MainLayout from "../templates/MainLayout";
 import { fetchData } from "../../api";
 
+const CASE_STATUS_LABELS = {
+  active: "Activos",
+  pending: "Pendientes",
+  responded: "Respondidos",
+  resolved: "Resueltos",
+  closed: "Cerrados",
+  cancelled: "Cancelados",
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
@@ -100,6 +109,8 @@ const AdminDashboard = () => {
             color="orange"
           />
         </div>
+
+        <CaseStatusChart cases={metrics?.cases} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
@@ -225,6 +236,46 @@ const MetricCard = ({ title, value, icon, description, color }) => {
       <p className="text-gray-300 text-sm font-bold">{title}</p>
       <p className="text-gray-500 text-[10px] mt-1 font-medium uppercase tracking-wider">{description}</p>
     </div>
+  );
+};
+
+const CaseStatusChart = ({ cases = {} }) => {
+  const data = Object.entries(CASE_STATUS_LABELS).map(([key, label]) => ({
+    key,
+    label,
+    value: Number(cases?.[key] || 0),
+  }));
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+
+  return (
+    <section className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6">
+        <div className="flex items-center gap-2">
+          <FileText size={20} className="text-[#8C7E97]" />
+          <h2 className="text-xl font-bold">Casos por estado</h2>
+        </div>
+        <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">
+          Distribución actual
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {data.map((item) => (
+          <div key={item.key} className="flex flex-col gap-3">
+            <div className="h-28 bg-[#1C2526] rounded-2xl border border-white/5 flex items-end justify-center p-2">
+              <div
+                className="w-full rounded-xl bg-[#8C7E97] min-h-2 transition-all"
+                style={{ height: `${Math.max((item.value / maxValue) * 100, item.value > 0 ? 12 : 4)}%` }}
+              />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white leading-none">{item.value}</p>
+              <p className="text-xs text-gray-400 mt-1">{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 };
 
