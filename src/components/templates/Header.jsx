@@ -1,15 +1,17 @@
 import { User, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
+import GlobalSearch from "../admin/GlobalSearch";
 import { useState, useEffect } from "react";
 import { fetchData, getStorageUrl } from "../../api";
 
 const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) => {
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState(null);
+  const role = localStorage.getItem('role');
+  const isAdmin = ['super_admin', 'admin', 'moderator'].includes(role);
 
   useEffect(() => {
-    const role = localStorage.getItem('role');
     const fetchProfile = async () => {
       try {
         let endpoint = "";
@@ -42,8 +44,10 @@ const Header = ({ roleName, profileRoute = "/customerProfile", onMenuToggle }) =
         <Menu size={28} />
       </button>
 
-      {/* Espaciador para empujar el lado derecho */}
-      <div className="hidden md:flex flex-1" />
+      {/* Espaciador — empuja el lado derecho; en admin muestra GlobalSearch */}
+      <div className="hidden md:flex flex-1 items-center">
+        {isAdmin && <GlobalSearch />}
+      </div>
 
       {/* Lado derecho: campanita, nombre del rol e ícono de perfil */}
       <div className="flex items-center gap-3">

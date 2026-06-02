@@ -25,6 +25,13 @@ const MyProposals = () => {
   const [editQuestions, setEditQuestions] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const TAB_STATUS_MAP = {
+    pending: 'pending',
+    accepted: 'active',
+    resolved: 'resolved',
+    all: '',
+  };
+
   const loadData = useCallback(async (page = 1, append = false) => {
     try {
       if (!append) setLoading(true);
@@ -32,9 +39,10 @@ const MyProposals = () => {
       let queryParams = new URLSearchParams();
       if (search) queryParams.append('search', search);
       queryParams.append('page', page);
+      const statusParam = TAB_STATUS_MAP[activeTab];
+      if (statusParam) queryParams.append('status', statusParam);
 
       const res = await fetchData(`/technician/responses/mine?${queryParams.toString()}`);
-      // El endpoint devuelve una estructura paginada: response.data.data o response.data
       const rawData = res.data?.data || res.data || [];
       
       if (append) {
@@ -52,7 +60,7 @@ const MyProposals = () => {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, activeTab]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -68,33 +76,17 @@ const MyProposals = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      loadData();
+      loadData(1);
     }, 400); // Debounce para búsqueda
     return () => clearTimeout(timeoutId);
   }, [loadData]);
 
-  // Filtrar localmente según la pestaña activa
-  const filteredResponses = responses.filter(resp => {
-    const serviceCase = resp.service_case;
-    if (!serviceCase) return false;
-
-    // Verificar si esta propuesta fue aceptada por el cliente
-    const isAccepted = serviceCase.accepted_technician_id === resp.technician_id;
-
-    if (activeTab === "pending") {
-      // Propuesta pendiente: no ha sido aceptada y el caso está activo o respondido
-      return !isAccepted && ['active', 'responded'].includes(serviceCase.status);
-    }
-    if (activeTab === "accepted") {
-      // Propuesta aceptada/trabajo en progreso: caso pendiente/in progress
-      return isAccepted && serviceCase.status === 'pending';
-    }
-    if (activeTab === "resolved") {
-      // Caso solucionado
-      return serviceCase.status === 'resolved';
-    }
-    return true; // 'all'
-  });
+  // Recargar desde página 1 cuando cambia la pestaña activa
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setResponses([]);
+    setCurrentPage(1);
+  };
 
   // Abrir Modal de Edición
   const openEditModal = (proposal) => {
@@ -231,7 +223,7 @@ const MyProposals = () => {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`py-3 px-4 text-sm font-bold border-b-2 whitespace-nowrap transition-all duration-200 ${
                 activeTab === tab.id
                   ? "border-[#8C7E97] text-[#8C7E97]"
@@ -254,7 +246,7 @@ const MyProposals = () => {
             <p className="text-red-400 mb-4">{error}</p>
             <button onClick={() => loadData()} className="text-[#8C7E97] underline">Reintentar</button>
           </div>
-        ) : filteredResponses.length === 0 ? (
+        ) : responses.length === 0 ? (
           <div className="text-center bg-[#262f31]/40 border border-white/5 rounded-3xl p-12 mt-4">
             <FileText className="mx-auto text-gray-600 mb-4" size={48} />
             <p className="text-gray-400 font-medium">No se encontraron propuestas en esta pestaña.</p>
@@ -267,7 +259,7 @@ const MyProposals = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {filteredResponses.map((item) => {
+            {responses.map((item) => {
               const serviceCase = item.service_case;
               const isAccepted = serviceCase?.accepted_technician_id === item.technician_id;
               

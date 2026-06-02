@@ -13,6 +13,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         return <Navigate to="/login" replace />;
     }
 
+    // Si hay token pero no hay rol guardado (sesión inválida/corrupta), limpiar y redirigir
+    if (!role) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        return <Navigate to="/login" replace />;
+    }
+
     // Si se especifican roles permitidos y el rol del usuario no está incluido
     if (allowedRoles && !allowedRoles.includes(role)) {
         // Redirigir según el rol real del usuario

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3, ChevronLeft, ChevronRight } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
@@ -52,6 +52,22 @@ const CaseDetail = () => {
   useEffect(() => {
     loadCase();
   }, [apiEndpoint]);
+
+  // Polling: re-fetch every 30s while the case is still active/pending
+  const pollingRef = useRef(null);
+  useEffect(() => {
+    const shouldPoll = !['resolved', 'cancelled'].includes(status);
+    if (!shouldPoll) {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      return;
+    }
+    pollingRef.current = setInterval(() => {
+      loadCase();
+    }, 30000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [status, apiEndpoint]);
 
   const handleInterest = async () => {
     setActionLoading(true);
@@ -916,7 +932,7 @@ const CaseDetail = () => {
                         );
                       })}
 
-                      {role === "client" && status === 'pending' && (
+                      {role === "client" && ['pending', 'active'].includes(status) && (
                         <button
                           onClick={handleResolveCase}
                           disabled={actionLoading}
@@ -927,7 +943,7 @@ const CaseDetail = () => {
                           ) : (
                             <>
                               <CheckCircle size={20} />
-                              Marcar como resuelto
+                              Terminar caso
                             </>
                           )}
                         </button>

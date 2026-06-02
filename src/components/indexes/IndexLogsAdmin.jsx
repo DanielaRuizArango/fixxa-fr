@@ -17,7 +17,8 @@ const IndexLogsAdmin = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -50,7 +51,8 @@ const IndexLogsAdmin = () => {
       queryParams.append('page', page);
       if (searchTerm) queryParams.append('search', searchTerm);
       if (actionFilter) queryParams.append('action', actionFilter);
-      if (dateFilter) queryParams.append('date', dateFilter);
+      if (dateFrom) queryParams.append('date_from', dateFrom);
+      if (dateTo) queryParams.append('date_to', dateTo);
 
       const response = await fetchData(`/admin/logs?${queryParams.toString()}`);
       
@@ -65,7 +67,7 @@ const IndexLogsAdmin = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, actionFilter, dateFilter]);
+  }, [searchTerm, actionFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -177,22 +179,40 @@ const IndexLogsAdmin = () => {
               ))}
             </select>
 
-            <input 
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer text-gray-300"
-              title="Filtrar por fecha"
-            />
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 px-1">Desde</label>
+                <input 
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer text-gray-300"
+                  title="Fecha desde"
+                />
+              </div>
+              <span className="text-gray-600 text-xs font-bold mt-4">—</span>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 px-1">Hasta</label>
+                <input 
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  className="bg-[#262f31]/50 border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#8C7E97] cursor-pointer text-gray-300"
+                  title="Fecha hasta"
+                />
+              </div>
+            </div>
 
-            {(actionFilter || dateFilter || searchTerm) && (
+            {(actionFilter || dateFrom || dateTo || searchTerm) && (
               <button
                 onClick={() => {
                   setActionFilter("");
-                  setDateFilter("");
+                  setDateFrom("");
+                  setDateTo("");
                   setSearchTerm("");
                 }}
-                className="px-4 py-3 text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 border border-red-500/20 rounded-2xl transition-all"
+                className="px-4 py-3 text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 border border-red-500/20 rounded-2xl transition-all self-end"
               >
                 LIMPIAR
               </button>

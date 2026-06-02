@@ -28,7 +28,9 @@ const CertBadge = ({ asset }) => {
 };
 
 /* ─── Certification upload panel ────────────────────────────── */
-const CertificationSection = ({ certs, onAdd, onDelete, uploading }) => {
+const CertificationSection = ({ certs, onAdd, onDelete, uploading, maxCerts = 5 }) => {
+  const certsCount = certs.length;
+  const atLimit = certsCount >= maxCerts;
   const [file, setFile]         = useState(null);
   const [preview, setPreview]   = useState(null);
   const [desc, setDesc]         = useState("");
@@ -92,16 +94,34 @@ const CertificationSection = ({ certs, onAdd, onDelete, uploading }) => {
             <Award size={20} className="text-[#8C7E97]" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">Certificaciones</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-white">Certificaciones</h3>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
+                atLimit
+                  ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                  : 'bg-[#8C7E97]/20 text-[#d7c4ff] border-[#8C7E97]/30'
+              }`}>
+                {certsCount} / {maxCerts}
+              </span>
+            </div>
             <p className="text-xs text-white/40">Sube tus certificados; un administrador los revisará antes de mostrarlos.</p>
           </div>
         </div>
 
         {/* ── Upload card ── */}
         <div className="bg-[#1f2a2b] border border-dashed border-[#8C7E97]/40 rounded-2xl p-5 flex flex-col gap-4">
-          {!preview ? (
+          {atLimit ? (
+          /* Limit reached notice */
+          <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+            <div className="p-3 rounded-full bg-red-500/10 border border-red-500/20">
+              <AlertCircle size={22} className="text-red-400" />
+            </div>
+            <p className="text-sm font-semibold text-red-300">Límite alcanzado</p>
+            <p className="text-xs text-white/30">Has subido el máximo de {maxCerts} certificaciones. Elimina una para agregar otra.</p>
+          </div>
+        ) : !preview ? (
             /* Drop zone */
-            <label className="flex flex-col items-center justify-center gap-3 cursor-pointer py-6 group">
+            <label className={`flex flex-col items-center justify-center gap-3 cursor-pointer py-6 group ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="p-4 rounded-full bg-[#8C7E97]/10 group-hover:bg-[#8C7E97]/20 transition border border-[#8C7E97]/20">
                 <Upload size={28} className="text-[#8C7E97]" />
               </div>
@@ -337,6 +357,7 @@ const AssetManager = () => {
         onAdd={handleCertUpload}
         onDelete={handleDelete}
         uploading={uploading}
+        maxCerts={5}
       />
 
       <div className="border-t border-white/5" />
