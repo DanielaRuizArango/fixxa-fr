@@ -87,7 +87,7 @@ const IndexTechnical = () => {
                             lng: position.coords.longitude
                         });
                     },
-                    (err) => console.log("Geolocalización no permitida")
+                    () => console.log("Geolocalización no permitida")
                 );
             }
         } catch (err) {

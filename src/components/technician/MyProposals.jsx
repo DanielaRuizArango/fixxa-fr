@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Edit3, MessageSquare, DollarSign, Clock, MapPin, CheckCircle, XCircle, Search, AlertCircle, FileText } from "lucide-react";
+import { Eye, Edit3, MessageSquare, DollarSign, Clock, MapPin, XCircle, Search, FileText } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
-import { fetchData, getStorageUrl } from "../../api";
+import { fetchData } from "../../api";
 import Swal from "sweetalert2";
+
+const TAB_STATUS_MAP = {
+  pending: "responded",
+  accepted: "pending",
+  resolved: "resolved",
+  all: "",
+};
 
 const MyProposals = () => {
   const navigate = useNavigate();
@@ -25,13 +32,6 @@ const MyProposals = () => {
   const [editQuestions, setEditQuestions] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const TAB_STATUS_MAP = {
-    pending: 'pending',
-    accepted: 'active',
-    resolved: 'resolved',
-    all: '',
-  };
-
   const loadData = useCallback(async (page = 1, append = false) => {
     try {
       if (!append) setLoading(true);
@@ -42,7 +42,7 @@ const MyProposals = () => {
       const statusParam = TAB_STATUS_MAP[activeTab];
       if (statusParam) queryParams.append('status', statusParam);
 
-      const res = await fetchData(`/technician/responses/mine?${queryParams.toString()}`);
+      const res = await fetchData(`/technician/my-responses?${queryParams.toString()}`);
       const rawData = res.data?.data || res.data || [];
       
       if (append) {

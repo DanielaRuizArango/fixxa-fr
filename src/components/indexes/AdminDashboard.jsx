@@ -58,6 +58,17 @@ const AdminDashboard = () => {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout roleName="Administrator" profileRoute="/adminProfile">
+        <div className="flex flex-col items-center justify-center pt-20 text-center">
+          <ShieldAlert size={40} className="text-red-400 mb-4" />
+          <p className="text-red-300">{error}</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout roleName="Administrator" profileRoute="/adminProfile">
       <div className="flex flex-col gap-8 pb-20 pt-4">

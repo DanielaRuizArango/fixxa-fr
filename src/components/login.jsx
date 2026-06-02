@@ -49,9 +49,6 @@ const Login = () => {
         localStorage.setItem('token', token);
       }
 
-      // Intentar obtener el objeto de usuario en diferentes niveles
-      const user = data.data?.user || data.user;
-      
       // Obtener el rol directamente de la respuesta del backend
       const role = data.data?.role || data.role;
       
