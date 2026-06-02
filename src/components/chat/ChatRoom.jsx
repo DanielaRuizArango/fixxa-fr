@@ -4,6 +4,7 @@ import MainLayout from "../templates/MainLayout";
 import { fetchData, getProfileImageUrl, getChatOtherParticipant, getChatParticipantUser, getAcceptedProposal } from "../../api";
 import { Send, ArrowLeft, XCircle, Eye, User, Lock } from "lucide-react";
 import Swal from "sweetalert2";
+import echo from "../../echo";
 
 const ChatRoom = () => {
   const { id } = useParams(); // conversation_id
@@ -62,23 +63,35 @@ const ChatRoom = () => {
   useEffect(() => {
     loadChat();
 
-    /**
-     * Polling como fallback temporal (WebSockets requieren configuración de
-     * Laravel Echo + Pusher en el backend).
-     *
-     * Mejoras aplicadas:
-     *  - Intervalo aumentado a 8s (era 5s) para reducir carga de red.
-     *  - Se pausa automáticamente cuando la pestaña está oculta.
-     *  - Solo actualiza el estado si hay mensajes nuevos (compara último ID).
-     */
+    // 1. Suscribirse a Laravel Echo (WebSocket en tiempo real con Reverb)
+    const channel = echo.private(`chat.${id}`);
+
+    channel.listen('.message.sent', (e) => {
+      const newMsg = e.message;
+      if (newMsg) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMsg.id)) return prev;
+          
+          // Si el mensaje es de la otra persona, podemos activar brevemente la indicación de que está escribiendo
+          if (newMsg.sender_id !== userId && prev.length > 0) {
+            setIsOtherTyping(true);
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 1800);
+          }
+          return [...prev, newMsg];
+        });
+      }
+    });
+
+    // 2. Polling híbrido de respaldo (Fallback)
+    // Se ejecuta cada 15 segundos para sincronizar el estado del caso
+    // Y actúa como respaldo de mensajes únicamente si el WebSocket se desconecta
     let intervalId = null;
 
-    const pollMessages = async () => {
-      // No hacer peticiones si la pestaña no está activa
+    const syncChat = async () => {
       if (document.visibilityState === 'hidden') return;
       try {
         const response = await fetchData(`/chat/${id}`);
-        const newMessages = response.data?.messages || response.messages || [];
         const convData = response.data?.conversation || response.conversation;
         if (convData) {
           setConversation(convData);
@@ -86,39 +99,39 @@ const ChatRoom = () => {
             setCaseStatus(convData.service_case.status);
           }
         }
-        setMessages(prev => {
-          // Solo actualizar si realmente hay mensajes nuevos
-          if (
-            newMessages.length !== prev.length ||
-            (newMessages.length > 0 && newMessages[newMessages.length - 1].id !== prev[prev.length - 1]?.id)
-          ) {
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage && lastMessage.sender_id !== userId && prev.length > 0) {
-              setIsOtherTyping(true);
-              clearTimeout(typingTimeoutRef.current);
-              typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 1800);
+
+        // Si la conexión de Echo NO está activa, actualizamos mensajes por polling
+        const isEchoConnected = echo.connector?.pusher?.connection?.state === 'connected';
+        if (!isEchoConnected) {
+          const newMessages = response.data?.messages || response.messages || [];
+          setMessages(prev => {
+            if (
+              newMessages.length !== prev.length ||
+              (newMessages.length > 0 && newMessages[newMessages.length - 1].id !== prev[prev.length - 1]?.id)
+            ) {
+              return newMessages;
             }
-            return newMessages;
-          }
-          return prev;
-        });
+            return prev;
+          });
+        }
       } catch (err) {
-        console.error("Error polling messages:", err);
+        console.error("Error sincronizando chat:", err);
       }
     };
 
-    intervalId = setInterval(pollMessages, 8000);
+    intervalId = setInterval(syncChat, 15000);
 
-    // Pausar/reanudar polling según visibilidad de la pestaña
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        pollMessages(); // Actualizar inmediatamente al volver
+        syncChat();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      // Salir del canal al desmontar el componente o al cambiar de conversación
+      echo.leave(`chat.${id}`);
       clearInterval(intervalId);
       clearTimeout(typingTimeoutRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
