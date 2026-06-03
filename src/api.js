@@ -164,6 +164,13 @@ export const enrichCasesWithImages = async (casesList, detailEndpoint = (id) => 
     );
 };
 
+/** ID del caso asociado a una conversación (misma fuente que la lista de chats). */
+export const getChatServiceCaseId = (conversation) => {
+    if (!conversation) return null;
+    const id = conversation.service_case_id ?? conversation.service_case?.id;
+    return id != null ? id : null;
+};
+
 export const getChatOtherParticipant = (conversation, role) => {
     if (!conversation) return null;
     if (role === 'client') {

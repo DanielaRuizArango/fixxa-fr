@@ -35,6 +35,8 @@ const CaseDetail = () => {
     apiEndpoint = `/admin/cases/${id}`;
   }
 
+  const status = caseData?.status || caseData?.state || "pending";
+
   const loadCase = async () => {
     try {
       setLoading(true);
@@ -429,7 +431,6 @@ const CaseDetail = () => {
   const canEditMyProposal = myProposal && caseData?.accepted_technician_id !== myTechnicianId && ['active', 'responded'].includes(caseData?.status);
 
   const images = caseData?.images || caseData?.photos || [];
-  const status = caseData?.status || caseData?.state || "pending";
   const caseNumber = caseData?.id ? `FTS-${caseData.id}` : "FTS-000000";
   const location = caseData?.location || caseData?.city || "No especificado";
   const serviceType = caseData?.service_type === 'remote' ? 'Remota' : 'Presencial';

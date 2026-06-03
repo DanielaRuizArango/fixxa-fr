@@ -1,10 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../templates/MainLayout";
-import { fetchData, getProfileImageUrl, getChatOtherParticipant, getChatParticipantUser, getAcceptedProposal } from "../../api";
+import { fetchData, getProfileImageUrl, getChatOtherParticipant, getChatParticipantUser, getAcceptedProposal, getChatServiceCaseId } from "../../api";
 import { Send, ArrowLeft, XCircle, Eye, User, Lock } from "lucide-react";
 import Swal from "sweetalert2";
 import echo from "../../echo";
+
+const extractChatMessage = (payload) => {
+  const raw = payload?.message ?? payload?.data?.message ?? payload?.data ?? payload;
+  if (!raw || typeof raw !== "object") return null;
+  return raw.id != null ? raw : null;
+};
+
+const upsertMessage = (list, msg) => {
+  if (!msg) return list;
+  const idx = list.findIndex((m) => m.id == msg.id);
+  if (idx >= 0) {
+    const next = [...list];
+    next[idx] = msg;
+    return next;
+  }
+  return [...list, msg];
+};
 
 const ChatRoom = () => {
   const { id } = useParams(); // conversation_id
@@ -17,6 +34,8 @@ const ChatRoom = () => {
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const typingWhisperRef = useRef(null);
+  const channelRef = useRef(null);
 
   const role = localStorage.getItem("role");
   const userName = localStorage.getItem("userName") || "Usuario";
@@ -65,23 +84,26 @@ const ChatRoom = () => {
 
     // 1. Suscribirse a Laravel Echo (WebSocket en tiempo real con Reverb)
     const channel = echo.private(`chat.${id}`);
+    channelRef.current = channel;
 
-    channel.listen('.message.sent', (e) => {
-      const newMsg = e.message;
-      if (newMsg) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === newMsg.id)) return prev;
-          
-          // Si el mensaje es de la otra persona, podemos activar brevemente la indicación de que está escribiendo
-          if (newMsg.sender_id !== userId && prev.length > 0) {
-            setIsOtherTyping(true);
-            clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 1800);
-          }
-          return [...prev, newMsg];
-        });
+    const onMessageSent = (e) => {
+      const newMsg = extractChatMessage(e);
+      if (!newMsg) return;
+      setIsOtherTyping(false);
+      clearTimeout(typingTimeoutRef.current);
+      setMessages((prev) => upsertMessage(prev, newMsg));
+    };
+
+    const onTypingWhisper = (data) => {
+      if (data?.userId != userId) {
+        setIsOtherTyping(true);
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 2500);
       }
-    });
+    };
+
+    channel.listen(".message.sent", onMessageSent);
+    channel.listenForWhisper("typing", onTypingWhisper);
 
     // 2. Polling híbrido de respaldo (Fallback)
     // Se ejecuta cada 15 segundos para sincronizar el estado del caso
@@ -104,15 +126,7 @@ const ChatRoom = () => {
         const isEchoConnected = echo.connector?.pusher?.connection?.state === 'connected';
         if (!isEchoConnected) {
           const newMessages = response.data?.messages || response.messages || [];
-          setMessages(prev => {
-            if (
-              newMessages.length !== prev.length ||
-              (newMessages.length > 0 && newMessages[newMessages.length - 1].id !== prev[prev.length - 1]?.id)
-            ) {
-              return newMessages;
-            }
-            return prev;
-          });
+          setMessages(newMessages);
         }
       } catch (err) {
         console.error("Error sincronizando chat:", err);
@@ -130,18 +144,20 @@ const ChatRoom = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      // Salir del canal al desmontar el componente o al cambiar de conversación
+      channel.stopListening(".message.sent");
+      channelRef.current = null;
       echo.leave(`chat.${id}`);
       clearInterval(intervalId);
       clearTimeout(typingTimeoutRef.current);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearTimeout(typingWhisperRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [id, loadChat, userId]);
 
   useEffect(scrollToBottom, [messages]);
 
   const handleResolveFromChat = async () => {
-    const serviceCaseId = conversation?.service_case?.id;
+    const serviceCaseId = getChatServiceCaseId(conversation);
     if (!serviceCaseId) return;
 
     const result = await Swal.fire({
@@ -190,22 +206,24 @@ const ChatRoom = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending || isChatClosed) return;
+    const text = newMessage.trim();
+    if (!text || sending || isChatClosed) return;
 
     try {
       setSending(true);
+      setNewMessage("");
       const response = await fetchData(`/chat/${id}/send`, {
         method: "POST",
-        body: JSON.stringify({ message: newMessage }),
+        body: JSON.stringify({ message: text }),
       });
-      
-      const sentMsg = response.data || response;
-      if (sentMsg && sentMsg.id) {
-        setMessages(prev => [...prev, sentMsg]);
-        setNewMessage("");
+
+      const sentMsg = extractChatMessage(response);
+      if (sentMsg) {
+        setMessages((prev) => upsertMessage(prev, sentMsg));
         setTimeout(scrollToBottom, 50);
       }
     } catch (err) {
+      setNewMessage(text);
       console.error("Error enviando mensaje:", err);
       const errorMessage = err.data?.message || err.message || "No se pudo enviar el mensaje.";
       Swal.fire({
@@ -241,6 +259,7 @@ const ChatRoom = () => {
   const otherUserImage = getProfileImageUrl(participant) || getProfileImageUrl(otherUser);
   const acceptedProposal = getAcceptedProposal(conversation);
   const isChatClosed = caseStatus === "resolved" || caseStatus === "cancelled";
+  const serviceCaseId = getChatServiceCaseId(conversation);
 
   return (
     <MainLayout roleName={userName}>
@@ -262,9 +281,9 @@ const ChatRoom = () => {
             <span className="text-xs text-white/70 truncate">{conversation?.service_case?.title}</span>
           </div>
           {/* Botón Ver Caso visible para ambos */}
-          {conversation?.service_case?.id && (
+          {serviceCaseId && (
             <button
-              onClick={() => navigate(`/case-detail/${conversation.service_case.id}`)}
+              onClick={() => navigate(`/case-detail/${serviceCaseId}`)}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 mr-2"
               title="Ver detalles del caso"
             >
@@ -333,7 +352,7 @@ const ChatRoom = () => {
           {isOtherTyping && (
             <div className="flex justify-start">
               <div className="bg-[#1c2526] border border-white/5 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
-                <div className="flex items-center gap-1.5" aria-label={`${otherUserName} estÃ¡ escribiendo`}>
+                <div className="flex items-center gap-1.5" aria-label={`${otherUserName} está escribiendo`}>
                   <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.2s]" />
                   <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.1s]" />
                   <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
@@ -359,7 +378,15 @@ const ChatRoom = () => {
             <input
               type="text"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewMessage(value);
+                if (!value.trim() || isChatClosed) return;
+                if (typingWhisperRef.current) clearTimeout(typingWhisperRef.current);
+                typingWhisperRef.current = setTimeout(() => {
+                  channelRef.current?.whisper("typing", { userId });
+                }, 400);
+              }}
               placeholder="Escribe un mensaje..."
               className="flex-1 bg-[#2f343b] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-[#8C7E97] transition"
             />
