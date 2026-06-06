@@ -59,12 +59,19 @@ const IndexCustomer = () => {
     }
   }, [searchTerm, statusFilter, typeFilter, sortBy, sortOrder]);
 
+  // Efecto para cambios en búsqueda y filtros de estado/tipo (con debounce)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      loadCases();
+      loadCases(1, false); // Resetear a página 1
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [loadCases]);
+  }, [searchTerm, statusFilter, typeFilter, loadCases]);
+
+  // Efecto para cambios en ordenamiento (sin debounce)
+  useEffect(() => {
+    loadCases(1, false); // Resetear a página 1
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, sortOrder]);
 
   const getStatusColor = (status) => {
     switch (status) {

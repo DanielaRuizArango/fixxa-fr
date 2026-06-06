@@ -97,12 +97,19 @@ const IndexTechnical = () => {
     loadUser();
   }, []);
 
+  // Efecto para cambios en búsqueda y filtros de ubicación (con debounce)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-        loadData();
+        loadData(1, false); // Resetear a página 1
     }, 500); // Debounce para la búsqueda
     return () => clearTimeout(timeoutId);
-  }, [loadData]);
+  }, [search, city, radius, serviceType, loadData]);
+
+  // Efecto para cambios en ordenamiento (sin debounce)
+  useEffect(() => {
+    loadData(1, false); // Resetear a página 1
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, sortOrder]);
 
   const clearFilters = () => {
     setSearch("");
@@ -112,6 +119,7 @@ const IndexTechnical = () => {
     setSortBy("created_at");
     setSortOrder("desc");
     setShowFilters(false);
+    setCurrentPage(1);
   };
 
   return (
