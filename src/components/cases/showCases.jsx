@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, XCircle, ZoomIn, Edit3, ChevronLeft, ChevronRight } from "lucide-react";
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl, getProfileImageUrl, getCaseProposals } from "../../api.js";
+import { isTechnicianVerified } from "../../utils/technicianVerification";
 import Swal from "sweetalert2";
 
 const CaseDetail = () => {
@@ -783,6 +784,7 @@ const CaseDetail = () => {
 
                         const ratingScore = tech?.technician?.average_rating || tech?.average_rating || 0;
                         const ratingCount = tech?.technician?.ratings_count || tech?.ratings_count || 0;
+                        const techVerified = isTechnicianVerified(tech?.technician ?? tech);
                         
                         return (
                           <div key={tech?.id || index} className={`rounded-3xl bg-[#1c2526] overflow-hidden border ${isAccepted ? 'border-emerald-500/40 shadow-inner' : 'border-white/5'} shadow-md transition-all duration-300`}>
@@ -821,6 +823,9 @@ const CaseDetail = () => {
                                       >
                                         {techName}
                                       </p>
+                                      {techVerified && (
+                                        <CheckCircle size={14} className="text-blue-400 fill-blue-400 shrink-0" title="Técnico verificado" />
+                                      )}
                                       <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
                                         (tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
                                           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"

@@ -7,6 +7,7 @@ import {
   Shield, Loader2, CreditCard, Phone, Mail, MapPin, Hash,
   FileText, ChevronRight, Eye,
 } from "lucide-react";
+import { buildRejectionReason, getRejectionReasonsForType } from "../../constants/rejectionReasons";
 
 /* ─── helpers ────────────────────────────────────────────────── */
 const STATUS_TABS = [
@@ -37,11 +38,12 @@ const CertificationReview = () => {
   /* modals */
   const [zoomedImg, setZoomedImg]         = useState(null);
   const [detailItem, setDetailItem]       = useState(null);   // item for detail modal
-  const [rejectTarget, setRejectTarget]   = useState(null);
-  const [rejectReason, setRejectReason]   = useState("");
-  const [rejectError, setRejectError]     = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
-  const textareaRef = useRef(null);
+  const [rejectTarget, setRejectTarget]       = useState(null);
+  const [rejectReasonSelect, setRejectReasonSelect] = useState("");
+  const [rejectNotes, setRejectNotes]         = useState("");
+  const [rejectError, setRejectError]         = useState("");
+  const [actionLoading, setActionLoading]     = useState(false);
+  const notesRef = useRef(null);
 
   /* ── fetch ── */
   const loadItems = async (mode = viewMode, status = activeTab) => {
@@ -65,12 +67,12 @@ const CertificationReview = () => {
 
   useEffect(() => { loadItems(viewMode, activeTab); }, [viewMode, activeTab]);
 
-  /* focus textarea when reject modal opens */
+  /* reset reject form when modal opens */
   useEffect(() => {
     if (rejectTarget) {
-      setRejectReason("");
+      setRejectReasonSelect("");
+      setRejectNotes("");
       setRejectError("");
-      setTimeout(() => textareaRef.current?.focus(), 100);
     }
   }, [rejectTarget]);
 
@@ -117,7 +119,12 @@ const CertificationReview = () => {
 
   /* ── reject ── */
   const submitReject = async () => {
-    if (!rejectReason.trim()) { setRejectError("El motivo es obligatorio."); return; }
+    if (!rejectReasonSelect) {
+      setRejectError("Selecciona un motivo del listado.");
+      return;
+    }
+
+    const rejectionReason = buildRejectionReason(rejectReasonSelect, rejectNotes);
     const isCert = viewMode === "certifications";
     const endpoint = isCert
       ? `/admin/certifications/${rejectTarget.id}/reject`
@@ -128,17 +135,17 @@ const CertificationReview = () => {
       await fetchData(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rejection_reason: rejectReason.trim() }),
+        body: JSON.stringify({ rejection_reason: rejectionReason }),
       });
       setItems((prev) =>
         prev.map((c) =>
           c.id === rejectTarget.id
-            ? { ...c, status: "rejected", rejection_reason: rejectReason.trim() }
+            ? { ...c, status: "rejected", rejection_reason: rejectionReason }
             : c
         )
       );
       if (detailItem?.id === rejectTarget.id)
-        setDetailItem((d) => ({ ...d, status: "rejected", rejection_reason: rejectReason.trim() }));
+        setDetailItem((d) => ({ ...d, status: "rejected", rejection_reason: rejectionReason }));
       setRejectTarget(null);
       Swal.fire({
         icon: "success", title: "Rechazado",
@@ -641,19 +648,39 @@ const CertificationReview = () => {
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-white/70">
-                Motivo del rechazo <span className="text-red-400">*</span>
-              </label>
-              <textarea
-                id="textarea-reject-reason"
-                ref={textareaRef}
-                value={rejectReason}
-                onChange={(e) => { setRejectReason(e.target.value); setRejectError(""); }}
-                rows={4}
-                placeholder="Describe por qué se rechaza este documento…"
-                className="w-full bg-[#262f31] border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-[#8C7E97] transition"
-              />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-white/70">
+                  Motivo del rechazo <span className="text-red-400">*</span>
+                </label>
+                <select
+                  id="select-reject-reason"
+                  value={rejectReasonSelect}
+                  onChange={(e) => { setRejectReasonSelect(e.target.value); setRejectError(""); }}
+                  className="w-full bg-[#262f31] border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8C7E97] transition"
+                >
+                  <option value="">Selecciona un motivo…</option>
+                  {getRejectionReasonsForType(viewMode === "certifications" ? "certification" : "id_document").map((reason) => (
+                    <option key={reason} value={reason}>{reason}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-white/70">
+                  Notas adicionales <span className="text-white/30 font-normal">(opcional)</span>
+                </label>
+                <textarea
+                  id="textarea-reject-notes"
+                  ref={notesRef}
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Añade detalles extra para el técnico…"
+                  className="w-full bg-[#262f31] border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-white/20 resize-none focus:outline-none focus:border-[#8C7E97] transition"
+                />
+              </div>
+
               {rejectError && <p className="text-xs text-red-400">{rejectError}</p>}
             </div>
 

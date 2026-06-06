@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Briefcase,
   CheckCircle2,
+  CheckCircle,
   Award,
   MessageSquare,
   Activity,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl, getProfileImageUrl } from "../../api";
+import { isTechnicianVerified } from "../../utils/technicianVerification";
 
 const TechnicianDetail = () => {
   const { id } = useParams();
@@ -97,7 +99,12 @@ const TechnicianDetail = () => {
                   </div>
                 )}
               </div>
-              <h1 className="text-xl font-bold text-white mb-1">{tech.user?.name}</h1>
+              <div className="flex items-center gap-2 justify-center mb-1">
+                <h1 className="text-xl font-bold text-white">{tech.user?.name}</h1>
+                {isTechnicianVerified(tech) && (
+                  <CheckCircle size={18} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
+                )}
+              </div>
               <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{tech.title || 'Técnico Especialista'}</p>
               
               <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">
@@ -128,15 +135,31 @@ const TechnicianDetail = () => {
                   <h3 className="font-bold text-sm">Portafolio / Certificados</h3>
                </div>
                <div className="grid grid-cols-2 gap-2">
-                  {tech.assets?.map((asset) => (
+                  {tech.assets?.map((asset) => {
+                    const status = asset.status ?? "pending";
+                    const statusClass = status === "approved"
+                      ? "bg-green-500/80"
+                      : status === "rejected"
+                        ? "bg-red-500/80"
+                        : "bg-yellow-500/80";
+                    const typeLabel = asset.type === "id_document"
+                      ? "Cédula"
+                      : asset.type === "certification"
+                        ? "Cert."
+                        : asset.type;
+                    return (
                     <div 
                       key={asset.id} 
-                      className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group"
+                      className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
                       onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
                     >
                        <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                       <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-bold ${statusClass}`}>
+                         {typeLabel}
+                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                   {(!tech.assets || tech.assets.length === 0) && (
                     <p className="col-span-2 text-[10px] text-gray-500 text-center py-4 italic">No hay archivos cargados.</p>
                   )}

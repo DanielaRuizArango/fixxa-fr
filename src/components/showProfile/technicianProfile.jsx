@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X, CheckCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
+import { isTechnicianVerified } from "../../utils/technicianVerification";
 
 const TechnicianProfile = () => {
   const navigate = useNavigate();
@@ -67,11 +68,11 @@ const TechnicianProfile = () => {
     );
   }
 
-  // Verificar si el técnico tiene la cédula aprobada
-  const isVerified = data.assets?.some(asset => 
-    asset.type === 'id_document' && 
-    (asset.approval_status === 'approved' || asset.status === 'approved')
-  );
+  const isVerified = isTechnicianVerified({
+    ...data,
+    is_verified: data.technician?.is_verified,
+    assets: data.assets,
+  });
 
   return (
     <MainLayout roleName={data.name} profileRoute="/technicianProfile">
@@ -105,6 +106,11 @@ const TechnicianProfile = () => {
                   <CheckCircle size={20} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
                 )}
               </div>
+              {!isVerified && (
+                <p className="text-[10px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mb-3 leading-relaxed">
+                  Para obtener el sello Verificado necesitas: cédula aprobada y todas tus certificaciones aprobadas.
+                </p>
+              )}
               <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{data.technician?.title || 'Técnico Especialista'}</p>
               
               <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">

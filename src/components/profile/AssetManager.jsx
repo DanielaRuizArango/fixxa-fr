@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { fetchData, getStorageUrl } from "../../api";
 import {
   Trash2, Plus, Briefcase, Award, Image as ImageIcon,
-  CheckCircle, XCircle, Upload, AlertCircle, Loader2, ZoomIn, X,
+  CheckCircle, XCircle, Upload, AlertCircle, Loader2, ZoomIn, X, CreditCard,
 } from "lucide-react";
+import { getVerificationProgress } from "../../utils/technicianVerification";
 
 /* ─── Certification status badge helper ─────────────────────── */
 const CertBadge = ({ asset }) => {
@@ -24,6 +25,113 @@ const CertBadge = ({ asset }) => {
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold">
       <AlertCircle size={12} /> Pendiente de revisión
     </span>
+  );
+};
+
+/* ─── ID document upload panel ──────────────────────────────── */
+const IdDocumentSection = ({ idDoc, onAdd, onDelete, uploading }) => {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState("");
+  const [zoomedImg, setZoomedImg] = useState(null);
+  const inputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+    setError("");
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      setError("Selecciona una imagen de tu cédula.");
+      return;
+    }
+    setError("");
+    await onAdd(file);
+    setFile(null);
+    setPreview(null);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+          <CreditCard size={20} className="text-blue-300" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-white">Documento de identidad</h3>
+          <p className="text-xs text-white/40">
+            Sube tu cédula. Debe ser aprobada junto con todas tus certificaciones para obtener el sello Verificado.
+          </p>
+        </div>
+      </div>
+
+      {idDoc ? (
+        <div className="bg-[#1f2a2b] border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <CertBadge asset={idDoc} />
+            <button
+              onClick={() => onDelete(idDoc.id)}
+              className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition"
+              title="Eliminar cédula"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+          <div
+            className="aspect-video rounded-xl overflow-hidden border border-white/10 cursor-zoom-in"
+            onClick={() => setZoomedImg(getStorageUrl(idDoc.image_path))}
+          >
+            <img src={getStorageUrl(idDoc.image_path)} alt="Cédula" className="w-full h-full object-cover" />
+          </div>
+          {idDoc.rejection_reason && (
+            <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+              <span className="font-bold">Motivo de rechazo:</span> {idDoc.rejection_reason}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="bg-[#1f2a2b] border border-dashed border-blue-500/40 rounded-2xl p-5 flex flex-col gap-4">
+          {preview ? (
+            <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10">
+              <img src={preview} alt="Vista previa cédula" className="w-full h-full object-cover" />
+              <button
+                onClick={() => { setFile(null); setPreview(null); if (inputRef.current) inputRef.current.value = ""; }}
+                className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center gap-2 py-8 cursor-pointer border border-dashed border-white/10 rounded-xl hover:border-blue-500/40 transition">
+              <Upload size={24} className="text-blue-300" />
+              <span className="text-sm text-white/60">Seleccionar imagen de cédula</span>
+              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
+            </label>
+          )}
+          {error && <p className="text-xs text-red-400">{error}</p>}
+          {preview && (
+            <button
+              onClick={handleSubmit}
+              disabled={uploading}
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <><Upload size={16} /> Subir cédula</>}
+            </button>
+          )}
+        </div>
+      )}
+
+      {zoomedImg && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setZoomedImg(null)}>
+          <img src={zoomedImg} alt="Cédula ampliada" className="max-w-full max-h-[88vh] rounded-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -307,6 +415,24 @@ const AssetManager = () => {
   };
 
   /* Certification upload (with description) */
+  const handleIdDocumentUpload = async (file) => {
+    setUploading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("type", "id_document");
+    formData.append("description", "Cédula de ciudadanía");
+    try {
+      const response = await fetchData("/technician/assets", { method: "POST", body: formData });
+      setAssets((prev) => [...prev.filter((a) => a.type !== "id_document"), response.data]);
+    } catch (err) {
+      console.error("Error al subir cédula:", err);
+      setError("Error al subir la cédula. Inténtalo de nuevo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleCertUpload = async (file, description) => {
     setUploading(true);
     setError(null);
@@ -343,6 +469,9 @@ const AssetManager = () => {
       </div>
     );
 
+  const verification = getVerificationProgress(assets);
+  const idDocument = assets.find((a) => a.type === "id_document");
+
   return (
     <div className="flex flex-col gap-10 mt-6">
       {error && (
@@ -350,6 +479,34 @@ const AssetManager = () => {
           {error}
         </div>
       )}
+
+      <div className="bg-[#1f2a2b] border border-white/10 rounded-2xl p-4 flex flex-wrap gap-2 text-xs">
+        <span className={`px-3 py-1 rounded-full border ${verification.idApproved ? "bg-green-500/20 text-green-300 border-green-500/30" : "bg-white/5 text-white/40 border-white/10"}`}>
+          Cédula {verification.idApproved ? "aprobada" : "pendiente"}
+        </span>
+        <span className={`px-3 py-1 rounded-full border ${verification.allCertsApproved && verification.hasCertifications ? "bg-green-500/20 text-green-300 border-green-500/30" : "bg-white/5 text-white/40 border-white/10"}`}>
+          Certificaciones{" "}
+          {verification.allCertsApproved && verification.hasCertifications
+            ? "completas"
+            : verification.hasCertifications
+              ? `${verification.pendingCerts + verification.rejectedCerts} pendiente(s)/rechazada(s)`
+              : "sin subir"}
+        </span>
+        {verification.isVerified && (
+          <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold">
+            Verificado
+          </span>
+        )}
+      </div>
+
+      <IdDocumentSection
+        idDoc={idDocument}
+        onAdd={handleIdDocumentUpload}
+        onDelete={handleDelete}
+        uploading={uploading}
+      />
+
+      <div className="border-t border-white/5" />
 
       {/* ── Dedicated Certifications section ── */}
       <CertificationSection

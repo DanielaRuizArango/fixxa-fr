@@ -11,8 +11,10 @@ import {
   Lock,
   Unlock,
   Star,
-  Eye
+  Eye,
+  CheckCircle,
 } from "lucide-react";
+import { isTechnicianVerified } from "../../utils/technicianVerification";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getProfileImageUrl } from "../../api";
 
@@ -129,8 +131,13 @@ const IndexTechnicianAdmin = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white truncate">{tech.name || tech.user?.name}</h3>
-                    <p className="text-[#8C7E97] text-xs font-semibold uppercase truncate">{tech.technician?.title || 'Especialista'}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <h3 className="font-bold text-white truncate">{tech.name || tech.user?.name}</h3>
+                      {isTechnicianVerified(tech) && (
+                        <CheckCircle size={14} className="text-blue-400 fill-blue-400 shrink-0" title="Verificado" />
+                      )}
+                    </div>
+                    <p className="text-[#8C7E97] text-xs font-semibold uppercase truncate">{tech.title || tech.technician?.title || 'Especialista'}</p>
                     <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-400">
                       <span className="flex items-center gap-1 truncate"><Mail size={12} className="flex-shrink-0" /> <span className="truncate">{tech.email || tech.user?.email}</span></span>
                       <span className="flex items-center gap-1 truncate"><MapPin size={12} className="flex-shrink-0" /> <span className="truncate">{tech.city || tech.user?.city || 'No especificada'}</span></span>

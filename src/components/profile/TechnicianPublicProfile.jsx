@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
+import { isTechnicianVerified } from "../../utils/technicianVerification";
 
 const TechnicianPublicProfile = () => {
   const { id } = useParams();
@@ -70,11 +71,7 @@ const TechnicianPublicProfile = () => {
     );
   }
 
-  // Verificar si el técnico tiene la cédula aprobada
-  const isVerified = tech.assets?.some(asset => 
-    asset.type === 'id_document' && 
-    (asset.approval_status === 'approved' || asset.status === 'approved')
-  );
+  const isVerified = isTechnicianVerified(tech);
 
   return (
     <MainLayout roleName={userName} profileRoute={role === 'client' ? '/customerProfile' : '/technicianProfile'}>
