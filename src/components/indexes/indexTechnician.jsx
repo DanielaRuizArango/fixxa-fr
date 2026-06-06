@@ -66,6 +66,11 @@ const IndexTechnical = () => {
     }
   }, [search, city, radius, userCoords, serviceType, sortBy, sortOrder]);
 
+  // Efecto para cargar casos al montar el componente
+  useEffect(() => {
+    loadData(1, false);
+  }, []);
+
   useEffect(() => {
     const loadUser = async () => {
         try {

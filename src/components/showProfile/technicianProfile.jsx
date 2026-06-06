@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award } from "lucide-react";
+import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X, CheckCircle } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 
@@ -9,14 +9,28 @@ const TechnicianProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [zoomedImg, setZoomedImg] = useState(null);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const response = await fetchData('/technician/me');
-        setData(response.data);
-        if (response.data?.name) {
-          localStorage.setItem('userName', response.data.name);
+        const techData = response.data;
+        setData(techData);
+        if (techData?.name) {
+          localStorage.setItem('userName', techData.name);
+        }
+        
+        // Cargar assets del técnico
+        try {
+          const assetsResponse = await fetchData('/technician/assets');
+          const assetsData = Array.isArray(assetsResponse) ? assetsResponse : (assetsResponse.data || []);
+          setData(prev => ({
+            ...prev,
+            assets: assetsData
+          }));
+        } catch (err) {
+          console.log("No se pudieron cargar los assets:", err);
         }
       } catch (err) {
         setError("No se pudo cargar la información del perfil.");
@@ -53,97 +67,181 @@ const TechnicianProfile = () => {
     );
   }
 
+  // Verificar si el técnico tiene la cédula aprobada
+  const isVerified = data.assets?.some(asset => 
+    asset.type === 'id_document' && 
+    (asset.approval_status === 'approved' || asset.status === 'approved')
+  );
+
   return (
     <MainLayout roleName={data.name} profileRoute="/technicianProfile">
+      <div className="flex flex-col gap-8 pb-20 pt-4 px-4">
+        
+        <button
+          onClick={() => navigate("/indexTechnician")}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors w-fit"
+        >
+          <ArrowLeft size={20} />
+          <span>Regresar</span>
+        </button>
 
-      {/* Botón de regreso */}
-      <button
-        onClick={() => navigate("/indexTechnician")}
-        className="absolute left-10 top-6 flex items-center gap-2 bg-[#8C7E97] px-4 py-2 rounded-lg hover:bg-[#77678a] transition"
-      >
-        <ArrowLeft size={18} />
-        Regresar
-      </button>
-
-      <div className="flex justify-center pt-10 px-4">
-        <div className="bg-[#3A3F47] rounded-xl p-8 md:p-10 w-full max-w-2xl shadow-lg border border-white/5">
-
-          {/* Avatar */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="bg-[#2B2F36] p-1 rounded-full mb-4 border-2 border-[#8C7E97]">
-              {data.image ? (
-                <img 
-                  src={getStorageUrl(data.image)} 
-                  alt={data.name}
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover"
-                />
-              ) : (
-                <div className="p-6 md:p-8">
-                  <User size={80} />
-                </div>
-              )}
-            </div>
-            <h1 className="text-3xl font-bold text-center">{data.name}</h1>
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-[#8C7E97] font-medium">Técnico Fixxa</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${data.technician?.is_available ? 'bg-green-500/20 text-green-400 border border-green-500/20' : 'bg-gray-500/20 text-gray-400 border border-gray-500/20'}`}>
-                {data.technician?.is_available ? '• Disponible' : '• No disponible'}
-              </span>
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="space-y-4 text-lg">
-
-            <div className="flex items-center gap-3 bg-[#2B2F36]/50 p-3 rounded-lg">
-              <Mail size={20} className="text-[#8C7E97]" />
-              <span className="text-sm md:text-base">{data.email}</span>
-            </div>
-
-            <div className="flex items-center gap-3 bg-[#2B2F36]/50 p-3 rounded-lg">
-              <Phone size={20} className="text-[#8C7E97]" />
-              <span className="text-sm md:text-base">{data.phone || 'No especificado'}</span>
-            </div>
-
-            <div className="flex items-center gap-3 bg-[#2B2F36]/50 p-3 rounded-lg">
-              <Award size={20} className="text-[#8C7E97]" />
-              <span className="text-sm md:text-base">{data.technician?.title || 'Técnico General'}</span>
-            </div>
-
-            <div className="flex items-center gap-3 bg-[#2B2F36]/50 p-3 rounded-lg">
-              <MapPin size={20} className="text-[#8C7E97]" />
-              <span className="text-sm md:text-base">{data.city}{data.address ? `, ${data.address}` : ''}</span>
-            </div>
-
-            <div className="flex flex-col gap-1 mt-6">
-              <div className="flex items-center gap-2 font-bold mb-1">
-                <Briefcase size={20} className="text-[#8C7E97]" />
-                <span>Experiencia Laboral</span>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Columna Izquierda */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <div className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col items-center text-center">
+              <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border-4 border-[#8C7E97]/20">
+                {data.image ? (
+                  <img src={getStorageUrl(data.image)} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <div className="w-full h-full bg-[#1C2526] flex items-center justify-center text-[#8C7E97]">
+                    <User size={48} />
+                  </div>
+                )}
               </div>
-              <p className="text-gray-300 text-base leading-relaxed p-4 bg-[#2B2F36]/30 rounded-lg italic">
-                {data.technician?.experience || 'Sin descripción de experiencia.'}
-              </p>
+              <div className="flex items-center gap-2 justify-center">
+                <h1 className="text-xl font-bold text-white">{data.name}</h1>
+                {isVerified && (
+                  <CheckCircle size={20} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
+                )}
+              </div>
+              <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{data.technician?.title || 'Técnico Especialista'}</p>
+              
+              <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">
+                <Star size={14} fill="currentColor" />
+                <span className="text-xs font-bold">{data.average_rating || 'N/A'}</span>
+                <span className="text-[10px] text-yellow-500/60 font-medium">({data.ratings?.length || 0} reseñas)</span>
+              </div>
+
+              <div className="w-full space-y-3">
+                <InfoRow icon={<MapPin size={14} />} label="Ciudad" value={data.city} />
+                <InfoRow icon={<Clock size={14} />} label="Horario" value={data.technician?.working_hours || 'No definido'} />
+                <InfoRow icon={<Phone size={14} />} label="Teléfono" value={data.phone || 'No definido'} />
+                <InfoRow icon={<Mail size={14} />} label="Email" value={data.email} />
+              </div>
+
+              <button
+                onClick={() => navigate("/editTechnician")}
+                className="w-full mt-4 flex items-center justify-center gap-2 bg-[#8C7E97] hover:bg-[#77678a] px-4 py-2 rounded-lg transition shadow-md text-white"
+              >
+                <Pencil size={16} />
+                Editar Perfil
+              </button>
             </div>
 
+            <div className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl">
+               <div className="flex items-center gap-2 mb-4">
+                  <ImageIcon size={18} className="text-[#8C7E97]" />
+                  <h3 className="font-bold text-sm">Mis Documentos</h3>
+               </div>
+               <div className="space-y-4">
+                  {/* Cédula */}
+                  {data.assets?.filter(asset => asset.type === 'id_document').length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Cédula</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {data.assets.filter(asset => asset.type === 'id_document').map((asset) => {
+                          const status = asset.approval_status ?? asset.status ?? 'pending';
+                          return (
+                          <div 
+                            key={asset.id} 
+                            className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
+                            onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
+                          >
+                             <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                             <div className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${status === 'approved' ? 'bg-green-500/80' : status === 'rejected' ? 'bg-red-500/80' : 'bg-yellow-500/80'}`}>
+                                {status === 'approved' ? '✓ Aprobado' : status === 'rejected' ? '✗ Rechazado' : '⏱ Pendiente'}
+                             </div>
+                          </div>
+                        );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Portafolio */}
+                  {data.assets?.filter(asset => asset.type !== 'id_document').length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Portafolio y Trabajos</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {data.assets.filter(asset => asset.type !== 'id_document').map((asset) => {
+                          const status = asset.approval_status ?? asset.status ?? 'pending';
+                          return (
+                          <div 
+                            key={asset.id} 
+                            className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
+                            onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
+                          >
+                             <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                             <div className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${status === 'approved' ? 'bg-green-500/80' : status === 'rejected' ? 'bg-red-500/80' : 'bg-yellow-500/80'}`}>
+                                {status === 'approved' ? '✓ Aprobado' : status === 'rejected' ? '✗ Rechazado' : '⏱ Pendiente'}
+                             </div>
+                          </div>
+                        );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!data.assets || data.assets.length === 0) && (
+                    <p className="col-span-2 text-[10px] text-gray-500 text-center py-4 italic">No has subido documentos.</p>
+                  )}
+               </div>
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-4 mt-10">
-
-            <button
-              onClick={() => navigate("/editTechnician")}
-              className="flex items-center gap-2 bg-[#8C7E97] px-6 py-2 rounded-lg hover:bg-[#77678a] transition shadow-md"
-            >
-              <Pencil size={18} />
-              Editar
-            </button>
-
+          {/* Columna Derecha */}
+          <div className="lg:col-span-3 flex flex-col gap-8">
+            <div className="bg-[#262f31] border border-white/5 rounded-3xl p-8 shadow-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Briefcase size={80} />
+               </div>
+               <div className="flex items-center gap-3 mb-4">
+                  <Award size={24} className="text-[#8C7E97]" />
+                  <h2 className="text-xl font-bold">Experiencia</h2>
+               </div>
+               <p className="text-gray-300 leading-relaxed italic bg-white/5 p-6 rounded-2xl border border-white/5">
+                 "{data.technician?.experience || 'Sin descripción de experiencia proporcionada.'}"
+               </p>
+            </div>
           </div>
+
         </div>
       </div>
 
+      {zoomedImg && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setZoomedImg(null)}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition"
+            onClick={() => setZoomedImg(null)}
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={zoomedImg}
+            alt="Documento ampliado"
+            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </MainLayout>
   );
 };
+
+const InfoRow = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 text-left p-2.5 bg-black/20 rounded-xl border border-white/5">
+    <div className="text-[#8C7E97]">
+      {icon}
+    </div>
+    <div className="flex flex-col min-w-0">
+      <span className="text-[8px] uppercase font-bold text-gray-500 leading-tight">{label}</span>
+      <span className="text-xs text-gray-200 truncate font-medium">{value}</span>
+    </div>
+  </div>
+);
 
 export default TechnicianProfile;

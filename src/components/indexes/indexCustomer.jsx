@@ -59,6 +59,11 @@ const IndexCustomer = () => {
     }
   }, [searchTerm, statusFilter, typeFilter, sortBy, sortOrder]);
 
+  // Efecto para cargar casos al montar el componente
+  useEffect(() => {
+    loadCases(1, false);
+  }, []);
+
   // Efecto para cambios en búsqueda y filtros de estado/tipo (con debounce)
   useEffect(() => {
     const timeoutId = setTimeout(() => {

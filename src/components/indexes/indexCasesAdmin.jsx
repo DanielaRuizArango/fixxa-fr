@@ -66,6 +66,11 @@ const IndexCasesAdmin = () => {
     }
   }, [searchTerm, statusFilter, cityFilter, typeFilter, sortBy, sortOrder]);
 
+  // Efecto para cargar casos al montar el componente
+  useEffect(() => {
+    loadCases(1, false);
+  }, []);
+
   // Efecto para cambios en búsqueda y filtros de estado/ciudad/tipo (con debounce)
   useEffect(() => {
     const timeoutId = setTimeout(() => {

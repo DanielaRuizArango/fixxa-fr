@@ -12,7 +12,8 @@ import {
   MessageSquare,
   Image as ImageIcon,
   Clock,
-  X
+  X,
+  CheckCircle
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
@@ -69,6 +70,12 @@ const TechnicianPublicProfile = () => {
     );
   }
 
+  // Verificar si el técnico tiene la cédula aprobada
+  const isVerified = tech.assets?.some(asset => 
+    asset.type === 'id_document' && 
+    (asset.approval_status === 'approved' || asset.status === 'approved')
+  );
+
   return (
     <MainLayout roleName={userName} profileRoute={role === 'client' ? '/customerProfile' : '/technicianProfile'}>
       <div className="flex flex-col gap-8 pb-20 pt-4">
@@ -95,7 +102,12 @@ const TechnicianPublicProfile = () => {
                   </div>
                 )}
               </div>
-              <h1 className="text-xl font-bold text-white mb-1">{tech.name}</h1>
+              <div className="flex items-center gap-2 justify-center">
+                <h1 className="text-xl font-bold text-white">{tech.name}</h1>
+                {isVerified && (
+                  <CheckCircle size={20} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
+                )}
+              </div>
               <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{tech.title || 'Técnico Especialista'}</p>
               
               <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">
