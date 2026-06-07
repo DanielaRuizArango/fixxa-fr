@@ -99,11 +99,11 @@ const TechnicianDetail = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 justify-center mb-1">
-                <h1 className="text-xl font-bold text-white">{tech.user?.name}</h1>
+              <div className="flex flex-wrap items-center gap-2 justify-center mb-1 w-full">
+                <h1 className="text-xl font-bold text-white break-words">{tech.user?.name}</h1>
                 {isTechnicianVerified(tech) && <VerifiedBadge variant="badge" />}
               </div>
-              <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{tech.title || 'Técnico Especialista'}</p>
+              <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4 break-words w-full">{tech.title || 'Técnico Especialista'}</p>
               
               <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">
                 <Star size={14} fill="currentColor" />
@@ -177,7 +177,7 @@ const TechnicianDetail = () => {
                   <Award size={24} className="text-[#8C7E97]" />
                   <h2 className="text-xl font-bold">Experiencia y Resumen</h2>
                </div>
-               <p className="text-gray-300 leading-relaxed italic bg-white/5 p-6 rounded-2xl border border-white/5">
+               <p className="text-gray-300 leading-relaxed italic bg-white/5 p-6 rounded-2xl border border-white/5 break-words whitespace-pre-wrap">
                  "{tech.experience || 'Sin descripción de experiencia proporcionada.'}"
                </p>
             </div>
@@ -198,8 +198,8 @@ const TechnicianDetail = () => {
                                  <div className="w-8 h-8 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[10px] font-bold text-[#8C7E97]">
                                     {rating.client?.user?.name?.charAt(0).toUpperCase() || 'C'}
                                  </div>
-                                 <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-white">{rating.client?.user?.name || 'Cliente Fixxa'}</span>
+                                 <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs font-bold text-white break-words">{rating.client?.user?.name || 'Cliente Fixxa'}</span>
                                     <span className="text-[10px] text-gray-500">{new Date(rating.created_at).toLocaleDateString()}</span>
                                  </div>
                               </div>
@@ -208,7 +208,7 @@ const TechnicianDetail = () => {
                                  <span className="text-xs font-bold">{rating.score}</span>
                               </div>
                            </div>
-                           <p className="text-xs text-gray-400 italic">"{rating.comment || 'Sin comentario.'}"</p>
+                           <p className="text-xs text-gray-400 italic break-words whitespace-pre-wrap leading-relaxed">"{rating.comment || 'Sin comentario.'}"</p>
                         </div>
                      ))}
                      {(!tech.ratings || tech.ratings.length === 0) && (
@@ -226,8 +226,8 @@ const TechnicianDetail = () => {
                   <div className="flex flex-col gap-4">
                      {tech.case_responses?.map((response) => (
                         <div key={response.id} className="bg-[#262f31] border border-white/5 rounded-2xl p-5 shadow-lg flex flex-col gap-3">
-                           <div className="flex justify-between items-start">
-                              <h4 className="text-sm font-bold text-white truncate w-40">{response.service_case?.title}</h4>
+                           <div className="flex flex-wrap justify-between items-start gap-2">
+                              <h4 className="text-sm font-bold text-white break-words min-w-0 flex-1">{response.service_case?.title}</h4>
                               <StatusBadge status={response.service_case?.status} />
                            </div>
                            <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold uppercase tracking-widest">
@@ -274,13 +274,13 @@ const TechnicianDetail = () => {
 };
 
 const InfoRow = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 text-left p-2.5 bg-black/20 rounded-xl border border-white/5">
-    <div className="text-[#8C7E97]">
+  <div className="flex items-start gap-3 text-left p-2.5 bg-black/20 rounded-xl border border-white/5 w-full">
+    <div className="text-[#8C7E97] shrink-0 mt-0.5">
       {icon}
     </div>
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col min-w-0 flex-1">
       <span className="text-[8px] uppercase font-bold text-gray-500 leading-tight">{label}</span>
-      <span className="text-xs text-gray-200 truncate font-medium">{value}</span>
+      <span className="text-xs text-gray-200 font-medium break-words whitespace-normal leading-relaxed">{value || "—"}</span>
     </div>
   </div>
 );

@@ -147,7 +147,7 @@ const EditTechnician = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form id="edit-technician-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col items-center gap-3">
             <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-[#8c7e97] bg-[#ffffff18]">
                 <img
@@ -299,29 +299,30 @@ const EditTechnician = () => {
               />
             </div>
           </div>
-
-          <div className="flex flex-col gap-3 mt-2">
-            <button
-              type="submit"
-              disabled={updating}
-              className={`w-full py-3 rounded-xl bg-[#8c7e97] text-white text-base font-semibold transition ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#a493bd]'}`}
-            >
-              {updating ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/technicianProfile')}
-              className="w-full py-3 rounded-xl border border-[#8c7e97] text-[#8c7e97] hover:bg-white/10 transition"
-            >
-              Cancelar
-            </button>
-          </div>
         </form>
 
         <div className="mt-10 pt-8 border-t border-[#3f4b4d]">
           <h2 className="text-2xl font-bold text-center mb-2">Galería de Profesional</h2>
           <p className="text-center text-white/50 text-sm mb-6">Sube fotos de tus herramientas, certificaciones y trabajos previos para generar más confianza en tus clientes.</p>
           <AssetManager />
+        </div>
+
+        <div className="flex flex-col gap-3 mt-10 pt-8 border-t border-[#3f4b4d]">
+          <button
+            type="submit"
+            form="edit-technician-form"
+            disabled={updating}
+            className={`w-full py-3 rounded-xl bg-[#8c7e97] text-white text-base font-semibold transition ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#a493bd]'}`}
+          >
+            {updating ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/technicianProfile')}
+            className="w-full py-3 rounded-xl border border-[#8c7e97] text-[#8c7e97] hover:bg-white/10 transition"
+          >
+            Cancelar
+          </button>
         </div>
       </div>
       </div>

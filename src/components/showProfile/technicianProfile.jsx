@@ -15,8 +15,11 @@ const DOCUMENT_SECTIONS = [
 
 const assetStatus = (asset) => asset.approval_status ?? asset.status ?? "pending";
 
+const REVIEWABLE_TYPES = new Set(["id_document", "certification"]);
+
 const DocumentAssetCard = ({ asset, onZoom }) => {
   const status = assetStatus(asset);
+  const showReviewStatus = REVIEWABLE_TYPES.has(asset.type);
 
   return (
     <div className="flex flex-col gap-2">
@@ -29,22 +32,24 @@ const DocumentAssetCard = ({ asset, onZoom }) => {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           alt={asset.description || "Documento"}
         />
-        <div
-          className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-            status === "approved"
-              ? "bg-green-500/80"
-              : status === "rejected"
-                ? "bg-red-500/80"
-                : "bg-yellow-500/80"
-          }`}
-        >
-          {status === "approved" ? "✓ Aprobado" : status === "rejected" ? "✗ Rechazado" : "⏱ Pendiente"}
-        </div>
+        {showReviewStatus && (
+          <div
+            className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+              status === "approved"
+                ? "bg-green-500/80"
+                : status === "rejected"
+                  ? "bg-red-500/80"
+                  : "bg-yellow-500/80"
+            }`}
+          >
+            {status === "approved" ? "✓ Aprobado" : status === "rejected" ? "✗ Rechazado" : "⏱ Pendiente"}
+          </div>
+        )}
       </div>
-      {asset.description && status !== "rejected" && (
+      {asset.description && (!showReviewStatus || status !== "rejected") && (
         <p className="text-[10px] text-gray-500 truncate">{asset.description}</p>
       )}
-      {status === "rejected" && (
+      {showReviewStatus && status === "rejected" && (
         <div className="rounded-xl bg-red-500/10 border border-red-500/25 p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-red-400 mb-1">
             Motivo de rechazo

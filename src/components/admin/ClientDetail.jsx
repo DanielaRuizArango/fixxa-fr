@@ -96,7 +96,7 @@ const ClientDetail = () => {
                   </div>
                 )}
               </div>
-              <h1 className="text-2xl font-bold text-white mb-1">{client.name}</h1>
+              <h1 className="text-2xl font-bold text-white mb-1 break-words w-full">{client.name}</h1>
               <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 ${client.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                 {client.status === 'active' ? '• Cuenta Activa' : '• Cuenta Bloqueada'}
               </span>
@@ -128,25 +128,25 @@ const ClientDetail = () => {
                 <div key={caseItem.id} className="bg-[#262f31] border border-white/5 rounded-2xl p-6 hover:border-[#8C7E97]/30 transition-all group shadow-lg">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-[10px] font-bold text-[#8C7E97] uppercase tracking-tighter bg-[#8C7E97]/10 px-2 py-0.5 rounded border border-[#8C7E97]/20">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <span className="text-[10px] font-bold text-[#8C7E97] uppercase tracking-tighter bg-[#8C7E97]/10 px-2 py-0.5 rounded border border-[#8C7E97]/20 shrink-0">
                           #{caseItem.id}
                         </span>
-                        <h3 className="font-bold text-white group-hover:text-[#8C7E97] transition-colors">
+                        <h3 className="font-bold text-white group-hover:text-[#8C7E97] transition-colors break-words min-w-0 flex-1">
                           {caseItem.title}
                         </h3>
                       </div>
-                      <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                      <p className="text-sm text-gray-400 mb-3 break-words whitespace-pre-wrap leading-relaxed">
                         {caseItem.description}
                       </p>
-                      <div className="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                         <div className="flex items-center gap-1">
-                           <Clock size={12} />
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                         <div className="flex items-start gap-1 min-w-0">
+                           <Clock size={12} className="shrink-0 mt-0.5" />
                            {new Date(caseItem.created_at).toLocaleDateString()}
                          </div>
-                         <div className="flex items-center gap-1">
-                           <MapPin size={12} />
-                           {caseItem.location}
+                         <div className="flex items-start gap-1 min-w-0 break-words">
+                           <MapPin size={12} className="shrink-0 mt-0.5" />
+                           <span className="normal-case tracking-normal font-medium">{caseItem.location}</span>
                          </div>
                       </div>
                     </div>
@@ -179,13 +179,13 @@ const ClientDetail = () => {
 };
 
 const InfoRow = ({ icon, label, value }) => (
-  <div className="flex items-center gap-4 text-left p-3 bg-black/20 rounded-2xl border border-white/5">
-    <div className="text-[#8C7E97]">
+  <div className="flex items-start gap-4 text-left p-3 bg-black/20 rounded-2xl border border-white/5 w-full">
+    <div className="text-[#8C7E97] shrink-0 mt-0.5">
       {icon}
     </div>
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col min-w-0 flex-1">
       <span className="text-[9px] uppercase font-bold text-gray-500 leading-tight">{label}</span>
-      <span className="text-sm text-gray-200 truncate font-medium">{value}</span>
+      <span className="text-sm text-gray-200 font-medium break-words whitespace-normal leading-relaxed">{value || "—"}</span>
     </div>
   </div>
 );

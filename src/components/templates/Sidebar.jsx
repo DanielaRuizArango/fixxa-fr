@@ -141,8 +141,8 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
             }
             allItems.push({ label: "Clientes", onClick: () => navigate("/indexClientAdmin"), icon: <Users size={15} className="text-[#8C7E97]" /> });
             allItems.push({ label: "Técnicos", onClick: () => navigate("/indexTechnicianAdmin"), icon: <Wrench size={15} className="text-[#8C7E97]" /> });
-            allItems.push({ label: "Casos", onClick: () => navigate("/indexCasesAdmin"), icon: <FileText size={15} className="text-[#8C7E97]" /> });
             allItems.push({ label: "Revisión de Documentos", onClick: () => navigate("/admin/certifications"), icon: <Award size={15} className="text-[#8C7E97]" /> });
+            allItems.push({ label: "Casos", onClick: () => navigate("/indexCasesAdmin"), icon: <FileText size={15} className="text-[#8C7E97]" /> });
             allItems.push({ label: "Bitácora (Logs)", onClick: () => navigate("/admin/logs"), icon: <Terminal size={15} className="text-[#8C7E97]" /> });
           }
 
