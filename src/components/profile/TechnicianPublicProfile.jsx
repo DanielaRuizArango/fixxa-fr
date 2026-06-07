@@ -13,11 +13,11 @@ import {
   Image as ImageIcon,
   Clock,
   X,
-  CheckCircle
 } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 import { isTechnicianVerified } from "../../utils/technicianVerification";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 const TechnicianPublicProfile = () => {
   const { id } = useParams();
@@ -101,9 +101,7 @@ const TechnicianPublicProfile = () => {
               </div>
               <div className="flex items-center gap-2 justify-center">
                 <h1 className="text-xl font-bold text-white">{tech.name}</h1>
-                {isVerified && (
-                  <CheckCircle size={20} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
-                )}
+                {isVerified && <VerifiedBadge variant="badge" />}
               </div>
               <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{tech.title || 'Técnico Especialista'}</p>
               

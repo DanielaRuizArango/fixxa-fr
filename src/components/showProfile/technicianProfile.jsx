@@ -1,9 +1,62 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X, CheckCircle } from "lucide-react";
+import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 import { isTechnicianVerified } from "../../utils/technicianVerification";
+import VerifiedBadge from "../common/VerifiedBadge";
+
+const DOCUMENT_SECTIONS = [
+  { type: "id_document", label: "Cédula" },
+  { type: "certification", label: "Certificados" },
+  { type: "tool", label: "Portafolio" },
+  { type: "work", label: "Trabajos" },
+];
+
+const assetStatus = (asset) => asset.approval_status ?? asset.status ?? "pending";
+
+const DocumentAssetCard = ({ asset, onZoom }) => {
+  const status = assetStatus(asset);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
+        onClick={() => onZoom(getStorageUrl(asset.image_path))}
+      >
+        <img
+          src={getStorageUrl(asset.image_path)}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          alt={asset.description || "Documento"}
+        />
+        <div
+          className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+            status === "approved"
+              ? "bg-green-500/80"
+              : status === "rejected"
+                ? "bg-red-500/80"
+                : "bg-yellow-500/80"
+          }`}
+        >
+          {status === "approved" ? "✓ Aprobado" : status === "rejected" ? "✗ Rechazado" : "⏱ Pendiente"}
+        </div>
+      </div>
+      {asset.description && status !== "rejected" && (
+        <p className="text-[10px] text-gray-500 truncate">{asset.description}</p>
+      )}
+      {status === "rejected" && (
+        <div className="rounded-xl bg-red-500/10 border border-red-500/25 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-red-400 mb-1">
+            Motivo de rechazo
+          </p>
+          <p className="text-[11px] text-red-200 leading-relaxed">
+            {asset.rejection_reason || "No se especificó un motivo. Contacta al administrador."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TechnicianProfile = () => {
   const navigate = useNavigate();
@@ -102,9 +155,7 @@ const TechnicianProfile = () => {
               </div>
               <div className="flex items-center gap-2 justify-center">
                 <h1 className="text-xl font-bold text-white">{data.name}</h1>
-                {isVerified && (
-                  <CheckCircle size={20} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
-                )}
+                {isVerified && <VerifiedBadge variant="badge" className="mt-0.5" />}
               </div>
               {!isVerified && (
                 <p className="text-[10px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mb-3 leading-relaxed">
@@ -135,65 +186,6 @@ const TechnicianProfile = () => {
               </button>
             </div>
 
-            <div className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl">
-               <div className="flex items-center gap-2 mb-4">
-                  <ImageIcon size={18} className="text-[#8C7E97]" />
-                  <h3 className="font-bold text-sm">Mis Documentos</h3>
-               </div>
-               <div className="space-y-4">
-                  {/* Cédula */}
-                  {data.assets?.filter(asset => asset.type === 'id_document').length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Cédula</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {data.assets.filter(asset => asset.type === 'id_document').map((asset) => {
-                          const status = asset.approval_status ?? asset.status ?? 'pending';
-                          return (
-                          <div 
-                            key={asset.id} 
-                            className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
-                            onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
-                          >
-                             <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
-                             <div className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${status === 'approved' ? 'bg-green-500/80' : status === 'rejected' ? 'bg-red-500/80' : 'bg-yellow-500/80'}`}>
-                                {status === 'approved' ? '✓ Aprobado' : status === 'rejected' ? '✗ Rechazado' : '⏱ Pendiente'}
-                             </div>
-                          </div>
-                        );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Portafolio */}
-                  {data.assets?.filter(asset => asset.type !== 'id_document').length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Portafolio y Trabajos</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {data.assets.filter(asset => asset.type !== 'id_document').map((asset) => {
-                          const status = asset.approval_status ?? asset.status ?? 'pending';
-                          return (
-                          <div 
-                            key={asset.id} 
-                            className="aspect-square rounded-xl overflow-hidden border border-white/5 hover:border-[#8C7E97]/50 transition-all cursor-zoom-in group relative"
-                            onClick={() => setZoomedImg(getStorageUrl(asset.image_path))}
-                          >
-                             <img src={getStorageUrl(asset.image_path)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
-                             <div className={`absolute top-1 right-1 px-2 py-0.5 rounded text-[10px] font-bold ${status === 'approved' ? 'bg-green-500/80' : status === 'rejected' ? 'bg-red-500/80' : 'bg-yellow-500/80'}`}>
-                                {status === 'approved' ? '✓ Aprobado' : status === 'rejected' ? '✗ Rechazado' : '⏱ Pendiente'}
-                             </div>
-                          </div>
-                        );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {(!data.assets || data.assets.length === 0) && (
-                    <p className="col-span-2 text-[10px] text-gray-500 text-center py-4 italic">No has subido documentos.</p>
-                  )}
-               </div>
-            </div>
           </div>
 
           {/* Columna Derecha */}
@@ -209,6 +201,38 @@ const TechnicianProfile = () => {
                <p className="text-gray-300 leading-relaxed italic bg-white/5 p-6 rounded-2xl border border-white/5">
                  "{data.technician?.experience || 'Sin descripción de experiencia proporcionada.'}"
                </p>
+            </div>
+
+            <div className="bg-[#262f31] border border-white/5 rounded-3xl p-6 shadow-xl">
+               <div className="flex items-center gap-2 mb-4">
+                  <ImageIcon size={18} className="text-[#8C7E97]" />
+                  <h3 className="font-bold text-sm">Mis Documentos</h3>
+               </div>
+               <div className="space-y-6">
+                  {DOCUMENT_SECTIONS.map(({ type, label }) => {
+                    const sectionAssets = data.assets?.filter((asset) => asset.type === type) ?? [];
+                    if (sectionAssets.length === 0) return null;
+
+                    return (
+                      <div key={type}>
+                        <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">{label}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {sectionAssets.map((asset) => (
+                            <DocumentAssetCard
+                              key={asset.id}
+                              asset={asset}
+                              onZoom={setZoomedImg}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {(!data.assets || data.assets.length === 0) && (
+                    <p className="text-[10px] text-gray-500 text-center py-4 italic">No has subido documentos.</p>
+                  )}
+               </div>
             </div>
           </div>
 

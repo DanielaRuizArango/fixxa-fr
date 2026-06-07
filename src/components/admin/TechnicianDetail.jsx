@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   Briefcase,
   CheckCircle2,
-  CheckCircle,
   Award,
   MessageSquare,
   Activity,
@@ -22,6 +21,7 @@ import {
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl, getProfileImageUrl } from "../../api";
 import { isTechnicianVerified } from "../../utils/technicianVerification";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 const TechnicianDetail = () => {
   const { id } = useParams();
@@ -101,9 +101,7 @@ const TechnicianDetail = () => {
               </div>
               <div className="flex items-center gap-2 justify-center mb-1">
                 <h1 className="text-xl font-bold text-white">{tech.user?.name}</h1>
-                {isTechnicianVerified(tech) && (
-                  <CheckCircle size={18} className="text-blue-400 fill-blue-400" title="Técnico verificado" />
-                )}
+                {isTechnicianVerified(tech) && <VerifiedBadge variant="badge" />}
               </div>
               <p className="text-[#8C7E97] text-xs font-bold uppercase tracking-widest mb-4">{tech.title || 'Técnico Especialista'}</p>
               

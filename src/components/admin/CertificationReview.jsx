@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { fetchData, getStorageUrl } from "../../api";
 import Swal from "sweetalert2";
 import MainLayout from "../templates/MainLayout";
 import {
   Award, X, CheckCircle, XCircle, ZoomIn, User, Calendar,
   Shield, Loader2, CreditCard, Phone, Mail, MapPin, Hash,
-  FileText, ChevronRight, Eye,
+  FileText, Eye, Search,
 } from "lucide-react";
 import { buildRejectionReason, getRejectionReasonsForType } from "../../constants/rejectionReasons";
 
@@ -26,6 +26,28 @@ const STATUS_META = {
 const fmt = (d) =>
   d ? new Date(d).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+const itemStatus = (item) => item.approval_status ?? item.status ?? "pending";
+
+const matchesSearch = (item, term) => {
+  const q = term.trim().toLowerCase();
+  if (!q) return true;
+
+  const user = item.technician?.user ?? item.user ?? {};
+  const tech = item.technician ?? {};
+
+  return [
+    user.name,
+    user.email,
+    user.id_number,
+    user.city,
+    user.phone,
+    tech.title,
+    tech.name,
+    item.description,
+    item.technician_name,
+  ].some((value) => value?.toLowerCase().includes(q));
+};
+
 /* ─── component ──────────────────────────────────────────────── */
 const CertificationReview = () => {
   /* view mode: "certifications" | "id_documents" */
@@ -33,7 +55,11 @@ const CertificationReview = () => {
   const [activeTab, setActiveTab]         = useState("");
   const [items, setItems]                 = useState([]);
   const [loading, setLoading]             = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError]                 = useState(null);
+  const [currentPage, setCurrentPage]     = useState(1);
+  const [hasMore, setHasMore]             = useState(false);
+  const [searchTerm, setSearchTerm]       = useState("");
 
   /* modals */
   const [zoomedImg, setZoomedImg]         = useState(null);
@@ -46,26 +72,105 @@ const CertificationReview = () => {
   const notesRef = useRef(null);
 
   /* ── fetch ── */
-  const loadItems = async (mode = viewMode, status = activeTab) => {
-    setLoading(true);
-    setError(null);
+  const parsePageResponse = (res, page) => {
+    const paginated = res?.data ?? res;
+    const list = Array.isArray(paginated?.data)
+      ? paginated.data
+      : Array.isArray(paginated)
+        ? paginated
+        : [];
+    const current = paginated?.current_page ?? page;
+    const last = paginated?.last_page ?? current;
+
+    return {
+      list,
+      currentPage: current,
+      lastPage: last,
+      hasMore: Boolean(paginated?.next_page_url) || (current < last && list.length > 0),
+    };
+  };
+
+  const fetchPage = useCallback(async (page, mode, status) => {
+    const endpoint = mode === "certifications"
+      ? `/admin/certifications`
+      : `/admin/id-documents`;
+    const params = new URLSearchParams();
+    params.append("page", String(page));
+    if (status) params.append("status", status);
+
+    const res = await fetchData(`${endpoint}?${params.toString()}`);
+    return parsePageResponse(res, page);
+  }, []);
+
+  const loadPage = useCallback(async (page = 1, append = false) => {
     try {
-      const endpoint = mode === "certifications"
-        ? `/admin/certifications`
-        : `/admin/id-documents`;
-      const qs  = status ? `?status=${status}` : "";
-      const res = await fetchData(`${endpoint}${qs}`);
-      const data = res?.data?.data ?? res?.data ?? res ?? [];
-      setItems(Array.isArray(data) ? data : []);
+      if (!append) setLoading(true);
+      setError(null);
+
+      const { list, currentPage: cp, hasMore: more } = await fetchPage(page, viewMode, activeTab);
+
+      setItems((prev) => (append ? [...prev, ...list] : list));
+      setHasMore(more);
+      setCurrentPage(cp);
     } catch (e) {
       console.error(e);
       setError("No se pudieron cargar los registros.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [viewMode, activeTab, fetchPage]);
 
-  useEffect(() => { loadItems(viewMode, activeTab); }, [viewMode, activeTab]);
+  const loadAllPagesForSearch = useCallback(async () => {
+    try {
+      setSearchLoading(true);
+      setError(null);
+      setItems([]);
+
+      let combined = [];
+      let pageNum = 1;
+
+      while (pageNum <= 50) {
+        const result = await fetchPage(pageNum, viewMode, activeTab);
+        if (!result.list.length) break;
+
+        combined = [...combined, ...result.list];
+
+        if (pageNum >= result.lastPage || !result.hasMore) break;
+        pageNum += 1;
+      }
+
+      setItems(combined);
+      setHasMore(false);
+      setCurrentPage(1);
+    } catch (e) {
+      console.error(e);
+      setError("No se pudieron cargar los registros.");
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [viewMode, activeTab, fetchPage]);
+
+  const displayedItems = useMemo(
+    () => items.filter((item) => matchesSearch(item, searchTerm)),
+    [items, searchTerm]
+  );
+
+  const isBusy = loading || searchLoading;
+
+  useEffect(() => {
+    setItems([]);
+    setHasMore(false);
+
+    if (searchTerm.trim()) {
+      const timeoutId = setTimeout(() => {
+        loadAllPagesForSearch();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+
+    loadPage(1, false);
+    return undefined;
+  }, [searchTerm, activeTab, viewMode, loadPage, loadAllPagesForSearch]);
 
   /* reset reject form when modal opens */
   useEffect(() => {
@@ -101,9 +206,9 @@ const CertificationReview = () => {
     try {
       await fetchData(endpoint, { method: "PATCH" });
       setItems((prev) =>
-        prev.map((c) => c.id === item.id ? { ...c, status: "approved" } : c)
+        prev.map((c) => c.id === item.id ? { ...c, status: "approved", approval_status: "approved" } : c)
       );
-      if (detailItem?.id === item.id) setDetailItem((d) => ({ ...d, status: "approved" }));
+      if (detailItem?.id === item.id) setDetailItem((d) => ({ ...d, status: "approved", approval_status: "approved" }));
       Swal.fire({
         icon: "success", title: "Aprobado",
         toast: true, position: "top-end",
@@ -140,12 +245,12 @@ const CertificationReview = () => {
       setItems((prev) =>
         prev.map((c) =>
           c.id === rejectTarget.id
-            ? { ...c, status: "rejected", rejection_reason: rejectionReason }
+            ? { ...c, status: "rejected", approval_status: "rejected", rejection_reason: rejectionReason }
             : c
         )
       );
       if (detailItem?.id === rejectTarget.id)
-        setDetailItem((d) => ({ ...d, status: "rejected", rejection_reason: rejectionReason }));
+        setDetailItem((d) => ({ ...d, status: "rejected", approval_status: "rejected", rejection_reason: rejectionReason }));
       setRejectTarget(null);
       Swal.fire({
         icon: "success", title: "Rechazado",
@@ -204,57 +309,89 @@ const CertificationReview = () => {
         </button>
       </div>
 
+      {/* ── search ── */}
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+        <input
+          id="input-search-technician"
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder={isCertMode
+            ? "Buscar técnico por nombre, correo o cédula en certificaciones…"
+            : "Buscar técnico por nombre, correo o número de cédula…"}
+          className="w-full pl-12 pr-4 py-3 bg-[#262f31] border border-white/5 rounded-2xl text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#8C7E97] transition"
+        />
+      </div>
+
       {/* ── status tabs ── */}
-      <div className="flex gap-1 p-1 rounded-2xl bg-[#262f31] border border-white/5 w-fit mb-8">
-        {STATUS_TABS.map((t) => (
-          <button
-            key={t.key}
-            id={`tab-status-${t.key || "all"}`}
-            onClick={() => setActiveTab(t.key)}
-            className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              activeTab === t.key
-                ? "bg-[#8C7E97] text-white shadow-lg"
-                : "text-white/50 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div className="flex gap-1 p-1 rounded-2xl bg-[#262f31] border border-white/5 w-fit">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.key}
+              id={`tab-status-${t.key || "all"}`}
+              onClick={() => setActiveTab(t.key)}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                activeTab === t.key
+                  ? "bg-[#8C7E97] text-white shadow-lg"
+                  : "text-white/50 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {!isBusy && !error && displayedItems.length > 0 && (
+          <p className="text-xs text-white/40">
+            {displayedItems.length} registro{displayedItems.length !== 1 ? "s" : ""} encontrado{displayedItems.length !== 1 ? "s" : ""}
+            {searchTerm.trim() ? " · búsqueda activa" : hasMore ? " · hay más disponibles" : ""}
+          </p>
+        )}
       </div>
 
       {/* ── loading ── */}
-      {loading && (
+      {isBusy && displayedItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <Loader2 size={40} className="text-[#8C7E97] animate-spin" />
-          <p className="text-white/40 text-sm">Cargando registros…</p>
+          <p className="text-white/40 text-sm">
+            {searchLoading
+              ? (isCertMode ? "Buscando certificaciones…" : "Buscando cédulas…")
+              : "Cargando registros…"}
+          </p>
         </div>
       )}
 
       {/* ── error ── */}
-      {!loading && error && (
+      {!isBusy && error && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-300 rounded-2xl p-4 text-sm">
           {error}
-          <button onClick={() => loadItems()} className="ml-3 underline text-red-200 hover:text-white">
+          <button
+            onClick={() => (searchTerm.trim() ? loadAllPagesForSearch() : loadPage(1, false))}
+            className="ml-3 underline text-red-200 hover:text-white"
+          >
             Reintentar
           </button>
         </div>
       )}
 
       {/* ── empty ── */}
-      {!loading && !error && items.length === 0 && (
+      {!isBusy && !error && displayedItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-white/30">
           {isCertMode ? <Award size={48} className="opacity-30" /> : <CreditCard size={48} className="opacity-30" />}
           <p className="text-sm">
-            No hay {isCertMode ? "certificaciones" : "cédulas"} para mostrar.
+            No hay {isCertMode ? "certificaciones" : "cédulas"} para mostrar
+            {searchTerm.trim() ? " con ese criterio de búsqueda." : "."}
           </p>
         </div>
       )}
 
       {/* ── grid ── */}
-      {!loading && !error && items.length > 0 && (
+      {!error && displayedItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {items.map((item) => {
-            const meta = STATUS_META[item.status] ?? STATUS_META.pending;
+          {displayedItems.map((item) => {
+            const status = itemStatus(item);
+            const meta = STATUS_META[status] ?? STATUS_META.pending;
             const user = item.technician?.user ?? {};
             return (
               <div
@@ -330,7 +467,7 @@ const CertificationReview = () => {
                   </div>
 
                   {/* rejection reason */}
-                  {item.status === "rejected" && item.rejection_reason && (
+                  {status === "rejected" && item.rejection_reason && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs text-red-300 leading-relaxed">
                       <span className="font-bold block mb-1">Motivo de rechazo:</span>
                       {item.rejection_reason}
@@ -338,7 +475,7 @@ const CertificationReview = () => {
                   )}
 
                   {/* quick actions */}
-                  {item.status === "pending" && (
+                  {status === "pending" && (
                     <div className="flex gap-2 pt-1 mt-1 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
                       <button
                         id={`btn-approve-${item.id}`}
@@ -362,6 +499,17 @@ const CertificationReview = () => {
               </div>
             );
           })}
+          {hasMore && !searchTerm.trim() && (
+            <div className="flex justify-center mt-4 w-full col-span-full">
+              <button
+                onClick={() => loadPage(currentPage + 1, true)}
+                disabled={isBusy}
+                className="px-8 py-3 bg-[#8C7E97] hover:bg-[#8C7E97]/80 text-white rounded-2xl font-bold transition-all shadow-lg shadow-[#8C7E97]/20 active:scale-95 disabled:opacity-50"
+              >
+                {loading ? "Cargando..." : isCertMode ? "Cargar más certificaciones" : "Cargar más cédulas"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -370,7 +518,8 @@ const CertificationReview = () => {
       ══════════════════════════════════════════════════════════════ */}
       {detailItem && (() => {
         const user = detailItem.technician?.user ?? {};
-        const meta = STATUS_META[detailItem.status] ?? STATUS_META.pending;
+        const detailStatus = itemStatus(detailItem);
+        const meta = STATUS_META[detailStatus] ?? STATUS_META.pending;
         return (
           <div
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
@@ -540,7 +689,7 @@ const CertificationReview = () => {
                 </div>
 
                 {/* rejection reason */}
-                {detailItem.status === "rejected" && detailItem.rejection_reason && (
+                {detailStatus === "rejected" && detailItem.rejection_reason && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-sm text-red-300 leading-relaxed">
                     <span className="font-bold block mb-1">Motivo de rechazo:</span>
                     {detailItem.rejection_reason}
@@ -548,7 +697,7 @@ const CertificationReview = () => {
                 )}
 
                 {/* actions */}
-                {detailItem.status === "pending" && (
+                {detailStatus === "pending" && (
                   <div className="flex gap-3 pt-2">
                     <button
                       id={`btn-detail-approve-${detailItem.id}`}

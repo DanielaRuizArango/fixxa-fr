@@ -4,6 +4,7 @@ import { MessageSquare, DollarSign, Clock, User, CheckCircle, Star, X, MapPin, X
 import MainLayout from "../templates/MainLayout.jsx";
 import { fetchData, getStorageUrl, getProfileImageUrl, getCaseProposals } from "../../api.js";
 import { isTechnicianVerified } from "../../utils/technicianVerification";
+import VerifiedBadge from "../common/VerifiedBadge";
 import Swal from "sweetalert2";
 
 const CaseDetail = () => {
@@ -823,9 +824,7 @@ const CaseDetail = () => {
                                       >
                                         {techName}
                                       </p>
-                                      {techVerified && (
-                                        <CheckCircle size={14} className="text-blue-400 fill-blue-400 shrink-0" title="Técnico verificado" />
-                                      )}
+                                      {techVerified && <VerifiedBadge variant="icon" />}
                                       <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
                                         (tech?.technician?.user?.is_online || tech?.user?.is_online || tech?.is_online)
                                           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
