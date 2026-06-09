@@ -119,11 +119,11 @@ const Sidebar = ({ navItems = [], isOpen, onClose }) => {
               </label>
             </div>
             
-            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-              <Clock size={14} className="text-[#8C7E97]" />
-              <div className="flex flex-col">
+            <div className="flex items-start gap-2 pt-2 border-t border-white/5">
+              <Clock size={14} className="text-[#8C7E97] shrink-0 mt-0.5" />
+              <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-[9px] uppercase font-bold text-gray-500 leading-tight">Horario</span>
-                <span className="text-[10px] text-gray-300 truncate w-32">{workingHours}</span>
+                <span className="text-[10px] text-gray-300 break-words whitespace-normal leading-relaxed">{workingHours}</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X } from "lucide-react";
+import { Pencil, User, Mail, Phone, MapPin, ArrowLeft, Briefcase, Award, Star, Clock, ImageIcon, X, MessageSquare } from "lucide-react";
 import MainLayout from "../templates/MainLayout";
 import { fetchData, getStorageUrl } from "../../api";
 import { isTechnicianVerified } from "../../utils/technicianVerification";
@@ -68,14 +68,22 @@ const TechnicianProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [ratingsData, setRatingsData] = useState(null);
   const [zoomedImg, setZoomedImg] = useState(null);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await fetchData('/technician/me');
-        const techData = response.data;
+        const [profileResponse, ratingsResponse] = await Promise.all([
+          fetchData('/technician/me'),
+          fetchData('/technician/my-rating').catch(() => null),
+        ]);
+
+        const techData = profileResponse.data;
         setData(techData);
+        if (ratingsResponse?.data) {
+          setRatingsData(ratingsResponse.data);
+        }
         if (techData?.name) {
           localStorage.setItem('userName', techData.name);
         }
@@ -132,6 +140,11 @@ const TechnicianProfile = () => {
     assets: data.assets,
   });
 
+  const averageRating = ratingsData?.average_score ?? data.average_rating ?? data.technician?.average_rating;
+  const ratingsCount = ratingsData?.total_ratings
+    ?? (Array.isArray(data.ratings) ? data.ratings.length : data.technician?.ratings_count ?? 0);
+  const recentRatings = ratingsData?.ratings?.data ?? (Array.isArray(data.ratings) ? data.ratings : []);
+
   return (
     <MainLayout roleName={data.name} profileRoute="/technicianProfile">
       <div className="flex flex-col gap-8 pb-20 pt-4 px-4">
@@ -171,8 +184,8 @@ const TechnicianProfile = () => {
               
               <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20 mb-6">
                 <Star size={14} fill="currentColor" />
-                <span className="text-xs font-bold">{data.average_rating || 'N/A'}</span>
-                <span className="text-[10px] text-yellow-500/60 font-medium">({data.ratings?.length || 0} reseñas)</span>
+                <span className="text-xs font-bold">{averageRating ?? 'N/A'}</span>
+                <span className="text-[10px] text-yellow-500/60 font-medium">({ratingsCount} reseñas)</span>
               </div>
 
               <div className="w-full space-y-3">
@@ -239,6 +252,54 @@ const TechnicianProfile = () => {
                   )}
                </div>
             </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={20} className="text-[#8C7E97]" />
+                  <h2 className="text-xl font-bold text-white">Reseñas de Clientes</h2>
+                </div>
+                {ratingsCount > 0 && (
+                  <button
+                    onClick={() => navigate("/my-ratings")}
+                    className="text-xs text-[#8C7E97] hover:text-white transition-colors"
+                  >
+                    Ver todas
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recentRatings.map((rating) => (
+                  <div key={rating.id} className="bg-[#262f31] border border-white/5 rounded-2xl p-5 shadow-lg">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-[#8C7E97]/20 flex items-center justify-center text-[10px] font-bold text-[#8C7E97] shrink-0">
+                          {(rating.client?.user?.name || rating.service_case?.client?.user?.name)?.charAt(0).toUpperCase() || 'C'}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-white break-words">
+                            {rating.client?.user?.name || rating.service_case?.client?.user?.name || 'Cliente Fixxa'}
+                          </span>
+                          <span className="text-[10px] text-gray-500">{new Date(rating.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5 text-yellow-500 shrink-0">
+                        <Star size={12} fill="currentColor" />
+                        <span className="text-xs font-bold">{rating.score}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 italic break-words whitespace-pre-wrap leading-relaxed">
+                      "{rating.comment || 'Sin comentario.'}"
+                    </p>
+                  </div>
+                ))}
+                {recentRatings.length === 0 && (
+                  <p className="col-span-full text-center text-gray-500 py-10 bg-white/5 rounded-2xl border border-dashed border-white/5 text-sm">
+                    Aún no tienes reseñas de clientes.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
         </div>
@@ -268,13 +329,13 @@ const TechnicianProfile = () => {
 };
 
 const InfoRow = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 text-left p-2.5 bg-black/20 rounded-xl border border-white/5">
-    <div className="text-[#8C7E97]">
+  <div className="flex items-start gap-3 text-left p-2.5 bg-black/20 rounded-xl border border-white/5">
+    <div className="text-[#8C7E97] shrink-0 mt-0.5">
       {icon}
     </div>
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col min-w-0 flex-1">
       <span className="text-[8px] uppercase font-bold text-gray-500 leading-tight">{label}</span>
-      <span className="text-xs text-gray-200 truncate font-medium">{value}</span>
+      <span className="text-xs text-gray-200 font-medium break-words whitespace-normal leading-relaxed">{value || "—"}</span>
     </div>
   </div>
 );
