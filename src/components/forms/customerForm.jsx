@@ -8,7 +8,7 @@ const CustomerForm = () => {
     name: "",
     email: "",
     password: "",
-    role: "technician",
+    role: "client",
     phone: "",
     city: "",
     address: "",
@@ -60,13 +60,18 @@ const CustomerForm = () => {
       }
     }
   };
+
+  const inputClass = (field) =>
+    `bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 placeholder:text-white/40 transition ${
+      errors[field] ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"
+    }`;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1C2526] font-['Kadwa'] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#1C2526] font-['Kadwa'] px-4 py-10">
       <div className="w-full max-w-md flex flex-col gap-4 text-white">
 
         {/* Logo */}
-        <div className="w-full h-[150px] rounded-full flex items-center justify-center mx-auto mb-6 bg-[url('/images/fixxa-logo.svg')] bg-no-repeat bg-center bg-contain">
-        </div>
+        <div className="w-full h-[150px] flex items-center justify-center mx-auto mb-2 bg-[url('/images/fixxa-logo.svg')] bg-no-repeat bg-center bg-contain" />
 
         {/* Nombre completo */}
         <label className="text-sm">Nombre completo</label>
@@ -76,9 +81,9 @@ const CustomerForm = () => {
           value={formData.name}
           onChange={handleInputChange}
           placeholder="Tu nombre completo"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.name ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("name")}
         />
-        {errors.name && <p className="text-red-500 text-xs">{errors.name[0]}</p>}
+        {errors.name && <p className="text-red-500 text-xs -mt-2">{errors.name[0]}</p>}
 
         {/* Correo */}
         <label className="text-sm">Correo</label>
@@ -88,9 +93,9 @@ const CustomerForm = () => {
           value={formData.email}
           onChange={handleInputChange}
           placeholder="correo@ejemplo.com"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.email ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("email")}
         />
-        {errors.email && <p className="text-red-500 text-xs">{errors.email[0]}</p>}
+        {errors.email && <p className="text-red-500 text-xs -mt-2">{errors.email[0]}</p>}
 
         {/* Contraseña */}
         <label className="text-sm">Contraseña</label>
@@ -100,9 +105,9 @@ const CustomerForm = () => {
           value={formData.password}
           onChange={handleInputChange}
           placeholder="Tu contraseña"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.password ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("password")}
         />
-        {errors.password && <p className="text-red-500 text-xs">{errors.password[0]}</p>}
+        {errors.password && <p className="text-red-500 text-xs -mt-2">{errors.password[0]}</p>}
 
         {/* Celular */}
         <label className="text-sm">Celular</label>
@@ -112,9 +117,9 @@ const CustomerForm = () => {
           value={formData.phone}
           onChange={handleInputChange}
           placeholder="+123 456 7890"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.phone ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("phone")}
         />
-        {errors.phone && <p className="text-red-500 text-xs">{errors.phone[0]}</p>}
+        {errors.phone && <p className="text-red-500 text-xs -mt-2">{errors.phone[0]}</p>}
 
         {/* Ciudad */}
         <label className="text-sm">Ciudad</label>
@@ -124,9 +129,9 @@ const CustomerForm = () => {
           value={formData.city}
           onChange={handleInputChange}
           placeholder="Ciudad donde resides"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.city ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("city")}
         />
-        {errors.city && <p className="text-red-500 text-xs">{errors.city[0]}</p>}
+        {errors.city && <p className="text-red-500 text-xs -mt-2">{errors.city[0]}</p>}
 
         {/* Dirección */}
         <label className="text-sm">Dirección</label>
@@ -136,9 +141,9 @@ const CustomerForm = () => {
           value={formData.address}
           onChange={handleInputChange}
           placeholder="Tu dirección"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.address ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("address")}
         />
-        {errors.address && <p className="text-red-500 text-xs">{errors.address[0]}</p>}
+        {errors.address && <p className="text-red-500 text-xs -mt-2">{errors.address[0]}</p>}
 
         {/* Tipo de documento */}
         <label className="text-sm">Tipo de documento</label>
@@ -146,14 +151,14 @@ const CustomerForm = () => {
           name="type_id"
           value={formData.type_id}
           onChange={handleInputChange}
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.type_id ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("type_id")}
         >
           <option value="" disabled>Selecciona un tipo</option>
           <option value="cedula">Cédula</option>
           <option value="pasaporte">Pasaporte</option>
           <option value="otro">Otro</option>
         </select>
-        {errors.type_id && <p className="text-red-500 text-xs">{errors.type_id[0]}</p>}
+        {errors.type_id && <p className="text-red-500 text-xs -mt-2">{errors.type_id[0]}</p>}
 
         {/* Número de documento */}
         <label className="text-sm">Número de documento</label>
@@ -163,43 +168,75 @@ const CustomerForm = () => {
           value={formData.id_number}
           onChange={handleInputChange}
           placeholder="Número de documento"
-          className={`bg-[#4C5462] rounded-xl p-3 text-white outline-none focus:ring-2 ${errors.id_number ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
+          className={inputClass("id_number")}
         />
-        {errors.id_number && <p className="text-red-500 text-xs">{errors.id_number[0]}</p>}
+        {errors.id_number && <p className="text-red-500 text-xs -mt-2">{errors.id_number[0]}</p>}
 
-        {/* Imagen */}
-        <label className="text-sm">Imagen</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className={`bg-[#4C5462] rounded-xl p-1 text-white outline-none focus:ring-2 ${errors.image ? "ring-2 ring-red-500" : "focus:ring-[#8C7E97]"}`}
-        />
-        {errors.image && <p className="text-red-500 text-xs">{errors.image[0]}</p>}
+        {/* Foto de perfil */}
+        <label className="text-sm">Foto de perfil</label>
+        <label
+          className={`flex flex-col items-center justify-center gap-2 bg-[#4C5462] rounded-xl p-4 cursor-pointer border-2 border-dashed transition-colors ${
+            errors.image ? "border-red-500" : "border-[#8C7E97] hover:border-white"
+          }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-8 h-8 text-[#8C7E97]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          <span className="text-sm text-[#8C7E97]">
+            {formData.image ? formData.image.name : "Sube tu foto de perfil"}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </label>
+        {formData.image && (
+          <img
+            src={URL.createObjectURL(formData.image)}
+            alt="Vista previa"
+            className="rounded-xl object-cover w-full h-40 border border-[#8C7E97]/30"
+          />
+        )}
+        {errors.image && <p className="text-red-500 text-xs -mt-2">{errors.image[0]}</p>}
 
-        {generalError && <p className="text-red-500 text-sm text-center font-bold mt-2">{generalError}</p>}
+        {generalError && (
+          <p className="text-red-500 text-sm text-center font-bold mt-2">{generalError}</p>
+        )}
 
-        {/* Botón de enviar */}
+        {/* Botón enviar */}
         <button
           onClick={handleSubmit}
-          className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-4 hover:opacity-80 transition duration-300"
+          className="bg-[#8C7E97] py-3 rounded-full text-white text-lg mt-4 hover:opacity-80 transition duration-300 shadow-lg shadow-[#8C7E97]/20"
         >
-          Enviar
+          Registrarse
         </button>
 
-        {/* Atras */}
-        <p className="text-center text-sm mt-4">
+        {/* Atrás */}
+        <p className="text-center text-sm mt-2 mb-6">
           <button
             onClick={() => navigate("/register")}
             className="text-[#8C7E97] hover:underline cursor-pointer"
           >
-            Atras
+            Atrás
           </button>
         </p>
 
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CustomerForm
+export default CustomerForm;
